@@ -11,7 +11,8 @@ def read_config():
         return json.load(json_file)
 
 config = read_config()['foodsoft']
-login_url = config['url']
+request_url = config['url'] + 'login'
+login_url = config['url'] + 'sessions'
 
 with requests.Session() as s:
     #headers={"Content-Type":"application/x-www-form-urlencoded",
@@ -21,14 +22,11 @@ with requests.Session() as s:
     headers= {
 'Host': 'app.foodcoops.at',
 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:69.0) Gecko/20100101 Firefox/69.0',
-'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-'Accept-Language': 'de-AT,en-US;q=0.7,en;q=0.3',
-'Accept-Encoding': 'gzip, deflate, br',
 'Content-Type':'application/x-www-form-urlencoded',
             }
-    r1 = s.get(login_url, headers=headers)
+    r1 = s.get(request_url, headers=headers)
     html = BeautifulSoup(r1.content, 'html.parser' )
-    headers['Referer'] = login_url
+    headers['Referer'] = request_url
     headers['Upgrade-Insecure-Requests'] = '1'
     login_data = {
             'utf8': '%25E2%259C%2593', #'true'
