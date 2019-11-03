@@ -53,9 +53,9 @@ class Event:
         self.regular_date = regular_date
         self.persons_needed = persons_needed
         self.capable_persons_needed = capable_persons_needed
-        self.assigned_persons = assigned_persons
+        self.assigned_persons = assigned_persons.copy()
         self.note = note
-        self.assignment_errors = assignment_errors
+        self.assignment_errors = assignment_errors.copy()
 
 class Participant:
     def __init__(self, name, capable, active, old_task_count, task_count=0):
@@ -357,6 +357,7 @@ def list_and_assign_events(events, participants, tasks):
         while t_events[-1].regular_date <= datetime.date.today() + datetime.timedelta(days=t.list_for_days) - datetime.timedelta(days=t.interval_days):
             new_date = t_events[-1].regular_date + datetime.timedelta(days=t.interval_days)
             new_e = Event(date=new_date, task_type=t, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed)
+            
             t_events.append(new_e)
             events.append(new_e)
             newly_listed_events.append(new_e)
@@ -409,7 +410,7 @@ def main():
     events, participants, tasks = load_objects()
     count_tasks(events=events, participants=participants)
     list_and_assign_events(events=events, participants=participants, tasks=tasks)
-    # update_ethercalc(events=events, participants=participants)
+    update_ethercalc(events=events, participants=participants)
 
     # events = []
     # for i in range(4):
