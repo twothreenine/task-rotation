@@ -58,12 +58,15 @@ class Event:
         self.assignment_errors = assignment_errors.copy()
 
 class Participant:
-    def __init__(self, name, capable, active, old_task_count, task_count=0):
+    def __init__(self, name, capable, active, entry_date, old_task_count):
         self.name = name
         self.capable = capable
         self.active = active
+        self.entry_date = entry_date
+        self.active_until = False
         self.old_task_count = old_task_count
-        self.task_count = task_count
+        self.task_count = 0
+        self.task_count_per_days_since_entry = False
 
 class Task:
     def __init__(self, type_id, start, end, interval_days, persons_needed, capable_persons_needed, assign_for_days, list_for_days, hide_from_days):
@@ -154,9 +157,10 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3): # c
             old_task_count = 0
         except:
             raise
-        p = Participant(name=row[0], capable=True, active=True, old_task_count=old_task_count)
+        p = Participant(name=row[0], capable=True, active=True, entry_date=read_date(row[4]), old_task_count=old_task_count)
         if row[1]=="0": p.capable=False
         if row[2]=="0": p.active=False
+        if row[4]!="": p.active_until=read_date(row[5])
         participants.append(p)
     for row in task_list:
         t = Task(type_id=row[0], start=read_date(row[2]), end=read_date(row[3]), interval_days=row[4], persons_needed=int(row[5]), capable_persons_needed=int(row[6]), assign_for_days=row[7], list_for_days=row[8], hide_from_days=row[9])
@@ -308,9 +312,19 @@ def count_tasks(events, participants): # calculating how many tasks each partici
             a_p.task_count += 1
             if not a_p.capable and a_p.task_count > a_p.old_task_count:
                 a_p.capable = True
+    for p in participants:
+        delta = datetime.date.today() - p.entry_date
+        p.task_count_per_days_since_entry = p.task_count / int(delta.days)
 
 def choose_person(participants, events, to_be_assigned_event, only_if_capable=False, recent_events_factor=0.8):
-    possible_participants = [participant for participant in participants if participant.active]
+    possible_participants = []
+    for p in participants:
+        if p.active:
+            if p.active_until:
+                if p.active_until >= to_be_assigned_event.date:
+                    possible_participants.append(p)
+            else:
+                possible_participants.append(p)
     if only_if_capable:
         possible_participants = [participant for participant in possible_participants if participant.capable]
     recent_events_count = recent_events_factor * len(possible_participants)
@@ -318,16 +332,17 @@ def choose_person(participants, events, to_be_assigned_event, only_if_capable=Fa
     assigned_events = sorted([event for event in events if event.assigned_persons], key=lambda x: x.date, reverse=True)
     for a_e in assigned_events:
         recent_events_count -= len(a_e.assigned_persons)
-        if recent_events_count < 0:
+        if recent_events_count <= -1:
             break
         for ap in a_e.assigned_persons:
             recently_assigned_possible_participants.append(ap)
+            print(ap.name+" added to recently_assigned_possible_participants")
     favorable_participants = [participant for participant in possible_participants if participant not in recently_assigned_possible_participants and participant not in to_be_assigned_event.assigned_persons]
     if not favorable_participants:
-        favorable_participants = possible_participants
+        favorable_participants = [participant for participant in possible_participants if participant not in to_be_assigned_event.assigned_persons]
     if favorable_participants:
-        lowest_task_count = min(favorable_participants, key=lambda p: p.task_count).task_count
-        most_favorable_participants = [participant for participant in favorable_participants if participant.task_count == lowest_task_count]
+        lowest_task_count_ratio = min(favorable_participants, key=lambda p: p.task_count_per_days_since_entry).task_count_per_days_since_entry
+        most_favorable_participants = [participant for participant in favorable_participants if participant.task_count_per_days_since_entry == lowest_task_count_ratio]
         person = random.choice(most_favorable_participants)
         print("Test: Assigned "+person.name+" to task on "+str(to_be_assigned_event.date))
         to_be_assigned_event.assigned_persons.append(person)
@@ -349,43 +364,36 @@ def list_and_assign_events(events, participants, tasks):
     to_be_assigned_events = []
     for t in tasks:
         t_events = sorted([event for event in events if event.task_type == t], key=lambda e: (e.regular_date))
-        if not t_events:
+        ended = False
+        if t.end:
+            if t.end < datetime.date.today():
+                ended = True
+        if not t_events and t.start <= datetime.date.today() + datetime.timedelta(days=t.list_for_days) and not ended:
             new_e = Event(date=t.start, task_type=t, event_no=1, regular_date=t.start, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed)
             t_events.append(new_e)
             events.append(new_e)
             newly_listed_events.append(new_e)
-        while t_events[-1].regular_date <= datetime.date.today() + datetime.timedelta(days=t.list_for_days) - datetime.timedelta(days=t.interval_days):
-            new_date = t_events[-1].regular_date + datetime.timedelta(days=t.interval_days)
-            new_e = Event(date=new_date, task_type=t, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed)
-            
-            t_events.append(new_e)
-            events.append(new_e)
-            newly_listed_events.append(new_e)
+        if t_events:
+            while t_events[-1].regular_date <= datetime.date.today() + datetime.timedelta(days=t.list_for_days) - datetime.timedelta(days=t.interval_days):
+                new_date = t_events[-1].regular_date + datetime.timedelta(days=t.interval_days)
+                if t.end:
+                    if new_date > t.end:
+                        break
+                new_e = Event(date=new_date, task_type=t, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed)
+                
+                t_events.append(new_e)
+                events.append(new_e)
+                newly_listed_events.append(new_e)
         for t_e in t_events:
             if t_e.date >= datetime.date.today() and t_e.regular_date <= datetime.date.today() + datetime.timedelta(days=t.assign_for_days) and t_e.assigned_persons==[] and t_e.persons_needed>0 and t_e.assignment_errors==[]:
                 to_be_assigned_events.append(t_e)
     
-    # problem: Selected persons will be assigned to all events; seems like the for loop can't differentiate between the 'to_be_assigned_event's in the list
     for to_be_assigned_event in to_be_assigned_events:
         for p in range(to_be_assigned_event.capable_persons_needed):
             choose_person(participants=participants, events=events, to_be_assigned_event=to_be_assigned_event, only_if_capable=True)
         for p in range(to_be_assigned_event.persons_needed - to_be_assigned_event.capable_persons_needed):
             choose_person(participants=participants, events=events, to_be_assigned_event=to_be_assigned_event)
         newly_assigned_events.append(to_be_assigned_event)
-    
-    # # this doesn't work either:
-    # to_be_assigned_persons = []
-    # for e,event in enumerate(to_be_assigned_events):
-    #     chosen_persons = []
-    #     for i in range(to_be_assigned_events[e].capable_persons_needed):
-    #         chosen_persons.append(choose_person(participants=participants, events=events, e=to_be_assigned_events[e], only_if_capable=True))
-    #     for i in range(to_be_assigned_events[e].persons_needed - to_be_assigned_events[e].capable_persons_needed):
-    #         chosen_persons.append(choose_person(participants=participants, events=events, e=to_be_assigned_events[e]))
-    #     to_be_assigned_persons.append(chosen_persons)
-
-    # for e,event in enumerate(to_be_assigned_events):
-    #     to_be_assigned_events[e].assigned_persons.extend(to_be_assigned_persons[e])
-    #     newly_assigned_events.append(to_be_assigned_events[e])
 
     events = sorted(events, key=lambda x: x.date)
 
