@@ -3,31 +3,22 @@ import ethercalc
 import json
 import logging
 import pprint
-import argparse
-import sys
-import inspect
 import datetime
 import random
+import babel.dates
 
 pp = pprint.PrettyPrinter(indent=4)
 config_path = '_credentials/config.json'
 newly_listed_events = []
 newly_assigned_events = []
-
-def retrieve_name(var): # for logging purposes
-        """
-        Gets the name of var. Does it from the out most frame inner-wards.
-        :param var: variable to get name from.
-        :return: string
-        """
-        for fi in reversed(inspect.stack()):
-            names = [var_name for var_name, var_val in fi.frame.f_locals.items() if var_val is var]
-            if len(names) > 0:
-                return names[0]
+default_language = "en"
+task_group_name = "Task group"
 
 def read_config():
     with open(config_path) as json_file:
         return json.load(json_file)
+
+config = read_config()
 
 def excel_date(date1):
     delta = date1 - datetime.date(1899, 12, 30)
@@ -58,7 +49,7 @@ class Event:
         self.assignment_errors = assignment_errors.copy()
 
 class Participant:
-    def __init__(self, name, capable, active, entry_date, old_task_count):
+    def __init__(self, name, capable, active, entry_date, old_task_count, language=None):
         self.name = name
         self.capable = capable
         self.active = active
@@ -67,10 +58,12 @@ class Participant:
         self.old_task_count = old_task_count
         self.task_count = 0
         self.task_count_per_days_since_entry = False
+        self.language = language
 
 class Task:
-    def __init__(self, type_id, start, end, interval_days, persons_needed, capable_persons_needed, assign_for_days, list_for_days, hide_from_days):
+    def __init__(self, type_id, name, start, end, interval_days, persons_needed, capable_persons_needed, assign_for_days, list_for_days, hide_from_days, reminder_days_before, note):
         self.type_id = type_id
+        self.name = name
         self.start = start
         self.end = end
         self.interval_days = interval_days
@@ -79,6 +72,8 @@ class Task:
         self.assign_for_days = assign_for_days
         self.list_for_days = list_for_days
         self.hide_from_days = hide_from_days
+        self.reminder_days_before = reminder_days_before
+        self.note = note
 
 class AssignmentError:
     def __init__(self, error_type, assigned_person_no, error_message, assigned_person=""):
@@ -88,7 +83,6 @@ class AssignmentError:
         self.error_message = error_message
 
 def load_ethercalc(sheet): # returns one of multiple sheets as a nested python list; for the first sheet: sheet=1
-    config = read_config()
     logging.debug("remote host: " + config["host"] + " remote page: " + config["page"] + "." + str(sheet))
     return ethercalc.EtherCalc(config["host"]).export(config["page"] + "." + str(sheet))
 
@@ -96,12 +90,12 @@ def load_ethercalc(sheet): # returns one of multiple sheets as a nested python l
 
 def get_cell(table, coord): # returns the value of a cell, called by spreadsheet coordinates, in a "table" as returned by load_ethercalc 
     x,y = ethercalc.ss_to_xy(coord)
-    logging.debug("called cell "+coord+ " of table "+retrieve_name(table))
+    # logging.debug("called cell "+coord+ " of table "+retrieve_name(table))
     return table[y][x]
 
 def set_cell(table, coord, value): # updates the value of a cell, called by spreadsheet coordinates, in a "table" as returned by load_ethercalc, to a given value
     x,y = ethercalc.ss_to_xy(coord)
-    logging.debug("updated cell "+coord+ " of table "+retrieve_name(table)+" from "+str(get_cell(table, coord))+" to "+str(value))
+    # logging.debug("updated cell "+coord+ " of table "+retrieve_name(table)+" from "+str(get_cell(table, coord))+" to "+str(value))
     table[y][x] = value
 
 def get_vertical_cells(table, coord, count): # returns a vertical range of cells as a list
@@ -131,7 +125,16 @@ def get_vertical_cells_demo():
 
 """ New class-based approach """
 
-def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3): # converts rows of the sheets events, participants and tasks into python objects; usually the header consists of 2 rows which have to be ignored (pop)
+def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, settings_sheet_no=4): # converts rows of the sheets events, participants and tasks into python objects; usually the header consists of 2 rows which have to be ignored (pop)
+    settings_list = load_ethercalc(sheet=settings_sheet_no)
+    for i in range(2):
+        settings_list.pop(0)
+    if settings_list[0][1]:
+        global default_language
+        default_language = settings_list[0][1]
+    if settings_list[1][1]:
+        global task_group_name
+        task_group_name = settings_list[1][1]
     events = []
     participants = []
     tasks = []
@@ -157,13 +160,13 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3): # c
             old_task_count = 0
         except:
             raise
-        p = Participant(name=row[0], capable=True, active=True, entry_date=read_date(row[4]), old_task_count=old_task_count)
+        p = Participant(name=row[0], capable=True, active=True, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6])
         if row[1]=="0": p.capable=False
         if row[2]=="0": p.active=False
         if row[4]!="": p.active_until=read_date(row[5])
         participants.append(p)
     for row in task_list:
-        t = Task(type_id=row[0], start=read_date(row[2]), end=read_date(row[3]), interval_days=row[4], persons_needed=int(row[5]), capable_persons_needed=int(row[6]), assign_for_days=row[7], list_for_days=row[8], hide_from_days=row[9])
+        t = Task(type_id=row[0], name=row[1], start=read_date(row[2]), end=read_date(row[3]), interval_days=row[4], persons_needed=int(row[5]), capable_persons_needed=int(row[6]), assign_for_days=row[7], list_for_days=row[8], hide_from_days=row[9], reminder_days_before=row[10], note=row[11])
         tasks.append(t)
     for row in event_list:
         assigned_persons = []
@@ -250,9 +253,9 @@ def update_ethercalc(events, participants):
     # update participant.task_count if different and set participant.capable to True if False and task_count > old_task_count
     # update all events from the first newly listed event on; before that, update assigned persons for newly assigned events
 
-    e = ethercalc.EtherCalc(read_config()["host"])
-    e_page = read_config()["page"]+".1"
-    p_page = read_config()["page"]+".2"
+    e = ethercalc.EtherCalc(config["host"])
+    e_page = config["page"]+".1"
+    p_page = config["page"]+".2"
     header_lines = 2
 
     # updating participants' task counts and capability
@@ -411,6 +414,105 @@ def list_and_assign_events(events, participants, tasks):
     # e.command(page, ["set A23 color",
     #                  "set A23 bgcolor rgb(255, 255, 0)"])
 
+def read_message_strings(participant):
+    if participant.language:
+        language = participant.language
+    else:
+        language = default_language
+    if language != 'en' and language != 'de_AT':
+        print("Locales for "+str(language)+" not registered, using en instead.")
+        language = 'en'
+    with open('locales/'+language+'.json') as json_file:
+        return json.load(json_file), language
+
+def assignment_notification_title(participant, event):
+    strings, language = read_message_strings(participant)
+    message = strings['assignment_notification_title'].format(task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, locale=language))
+    return message
+
+def reminder_title(participant, event):
+    strings, language = read_message_strings(participant)
+    message = strings['reminder_title'].format(task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, locale=language))
+    return message
+
+def check_up_title(participant, event):
+    strings, language = read_message_strings(participant)
+    message = strings['check_up_title'].format(task_name=event.task_type.name)
+    return message
+
+def other_assigned_persons_str(p, e, strings):
+    persons = [participant for participant in e.assigned_persons if participant != p]
+    if not persons:
+        return ""
+    else:
+        if len(persons) == 1:
+            other_assigned_persons_list = persons[0].name
+        elif len(persons) == 2:
+            other_assigned_persons_list = persons[0].name + strings['and'] + persons[1].name
+        else:
+            other_assigned_persons_list = persons[0].name
+            middle_persons = persons.copy()
+            middle_persons.pop(0)
+            middle_persons.pop(-1)
+            for o_p in middle_persons:
+                other_assigned_persons_list += ", " + o_p.name
+            other_assigned_persons_list += strings['oxford_comma'] + strings['and'] + persons[-1].name
+        return strings['other_assigned_persons'].format(other_assigned_persons_list=other_assigned_persons_list)
+
+def assignment_notification_content(participant, event):
+    strings, language = read_message_strings(participant)
+    other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
+    message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
+        strings['assignment_notification_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, format='full', locale=language), reminder_days_before=int(event.task_type.reminder_days_before)) + "\n" + \
+        strings['substitution_note'] + "\n" + \
+        "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
+        config['host'] + "/=" + config['page']
+    return message
+
+def reminder_content(participant, event):
+    strings, language = read_message_strings(participant)
+    other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
+    please_note = ""
+    if event.task_type.note:
+        please_note = strings['please_note'] + event.task_type.note + "\n"
+    please_note_for_this_event = ""
+    if event.note:
+        please_note_for_this_event = strings['please_note_for_this_event'] + event.note + "\n"
+    message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
+        strings['reminder_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
+        strings['substitution_note'] + "\n" + \
+        please_note + please_note_for_this_event + \
+        "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
+        config['host'] + "/=" + config['page']
+    return message
+
+def check_up_content(participant, event):
+    strings, language = read_message_strings(participant)
+    other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
+    message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
+        strings['check_up_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.task_type.name) + "\n" + \
+        "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
+        config['host'] + "/=" + config['page']
+    return message
+
+def send_assignment_notifications():
+    for e in newly_assigned_events:
+        for a_p in e.assigned_persons:
+            print(assignment_notification_title(participant=a_p, event=e))
+            print(assignment_notification_content(participant=a_p, event=e))
+
+def send_reminders():
+    for e in newly_assigned_events:
+        for a_p in e.assigned_persons:
+            print(reminder_title(participant=a_p, event=e))
+            print(reminder_content(participant=a_p, event=e))
+
+def send_check_ups():
+    for e in newly_assigned_events:
+        for a_p in e.assigned_persons:
+            print(check_up_title(participant=a_p, event=e))
+            print(check_up_content(participant=a_p, event=e))
+
 def main():
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("Enter Main()")
@@ -418,7 +520,10 @@ def main():
     events, participants, tasks = load_objects()
     count_tasks(events=events, participants=participants)
     list_and_assign_events(events=events, participants=participants, tasks=tasks)
-    update_ethercalc(events=events, participants=participants)
+    # update_ethercalc(events=events, participants=participants)
+    send_assignment_notifications()
+    send_reminders()
+    send_check_ups()
 
     # events = []
     # for i in range(4):

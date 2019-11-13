@@ -1,0 +1,16 @@
+{
+"hello":"Hi {participant_name},",
+"bye":"Sent automatically by {task_group_name} bot",
+"and": " and ",
+"oxford_comma": ",",
+"assignment_notification_title":"You have been selected to be responsible for {task_name} on {event_date}",
+"assignment_notification_text": "you{other_assigned_persons} have been selected to be responsible for the task {task_name} on {event_date}.\nWe advise you to take it down right away, but we will send you a reminder {reminder_days_before} days prior.",
+"other_assigned_persons": ", together with {other_assigned_persons_list},",
+"substitution_note": "If you cannot undertake it yourself, please arrange a substitute.",
+"reminder_title": "Reminder: You are responsible for {task_name} on {event_date}",
+"reminder_text": "this {event_date} you{other_assigned_persons} are responsible for the task {task_name}.",
+"please_note": "Please note: ",
+"please_note_for_this_event": "Please note for this event: ",
+"check_up_title": "Did everything work out at {task_name} yesterday?",
+"check_up_text": "you{other_assigned_persons} were responsible for yesterday's task {task_name}.\nYou have carried it out as planned? Perfect, there's nothing left to do.\nYou did not do it yourself? Please enter the correct names in the spreadsheet so that our records are right."
+}
