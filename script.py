@@ -13,6 +13,8 @@ newly_listed_events = []
 newly_assigned_events = []
 default_language = "en"
 task_group_name = "Task group"
+recent_events_factor = 0.8
+header_lines = 2
 
 def read_config():
     with open(config_path) as json_file:
@@ -37,7 +39,7 @@ def read_date(date1):
         return date
 
 class Event:
-    def __init__(self, date, task_type, event_no, regular_date, persons_needed, capable_persons_needed, assigned_persons=[], note="", assignment_errors=[]):
+    def __init__(self, date, task_type, event_no, regular_date, persons_needed, capable_persons_needed, assigned_persons=[], note="", assignment_errors=[], reminders_sent=False, check_ups_sent=False):
         self.date = date
         self.task_type = task_type
         self.event_no = event_no
@@ -47,6 +49,10 @@ class Event:
         self.assigned_persons = assigned_persons.copy()
         self.note = note
         self.assignment_errors = assignment_errors.copy()
+        self.reminders_sent_before = reminders_sent
+        self.reminders_sent = reminders_sent
+        self.check_ups_sent_before = check_ups_sent
+        self.check_ups_sent = check_ups_sent
 
 class Participant:
     def __init__(self, name, capable, active, entry_date, old_task_count, language=None):
@@ -135,6 +141,14 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, sett
     if settings_list[1][1]:
         global task_group_name
         task_group_name = settings_list[1][1]
+    if settings_list[2][1]:
+        global recent_events_factor
+        recent_events_factor = settings_list[2][1]
+        print("recent events factor = "+str(recent_events_factor))
+    if settings_list[3][1]:
+        global header_lines
+        header_lines = int(settings_list[3][1])
+        print("header lines = "+str(header_lines))
     events = []
     participants = []
     tasks = []
@@ -205,7 +219,11 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, sett
                         error = AssignmentError(error_type="Match count error", assigned_person_no=row.index(cell)+1, assigned_person=str(cell), error_message="Match count error: "+str(matched_count)+" matching participants found")
                         assignment_errors.append(error)
         task_type = next((task for task in tasks if task.type_id == row[1]), None)
-        e = Event(date=read_date(row[0]), task_type=task_type, event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[6]), capable_persons_needed=int(row[7]), assigned_persons=assigned_persons, note=row[13], assignment_errors=assignment_errors)
+        reminders_sent = False
+        if row[14] == "1": reminders_sent = True
+        check_ups_sent = False
+        if row[15] == "1": check_ups_sent = True
+        e = Event(date=read_date(row[0]), task_type=task_type, event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[6]), capable_persons_needed=int(row[7]), assigned_persons=assigned_persons, note=row[13], assignment_errors=assignment_errors, reminders_sent=reminders_sent, check_ups_sent=check_ups_sent)
         events.append(e)
     return events, participants, tasks
 
@@ -222,7 +240,7 @@ def assigned_persons_column_letter(person_count):
         column_letter="M"
     return column_letter
 
-def update_ethercalc_assignments(events, header_lines, ecalc, e_page, event_to_assign):
+def update_ethercalc_assignments(events, ecalc, e_page, event_to_assign):
     person_count = 0
     if event_to_assign.assigned_persons:
         if len(event_to_assign.assigned_persons) > 5:
@@ -256,7 +274,6 @@ def update_ethercalc(events, participants):
     e = ethercalc.EtherCalc(config["host"])
     e_page = config["page"]+".1"
     p_page = config["page"]+".2"
-    header_lines = 2
 
     # updating participants' task counts and capability
     for p in participants:
@@ -276,9 +293,9 @@ def update_ethercalc(events, participants):
             e.command(e_page, ["set B"+str(events.index(e_o)+1+header_lines)+" value n "+str(e_o.task_type.type_id)])
             e.command(e_page, ["set C"+str(events.index(e_o)+1+header_lines)+" value n "+str(e_o.event_no)])
             e.command(e_page, ["set D"+str(events.index(e_o)+1+header_lines)+" constant nd "+str(excel_date(e_o.regular_date))+" "+str(e_o.regular_date)])
-            e.command(e_page, ["copy E"+str(header_lines+2)+" formulas"])
+            e.command(e_page, ["copy E"+str(header_lines+1)+" formulas"])
             e.command(e_page, ["paste E"+str(events.index(e_o)+1+header_lines)+" formulas"])
-            e.command(e_page, ["copy F"+str(header_lines+2)+" formulas"])
+            e.command(e_page, ["copy F"+str(header_lines+1)+" formulas"])
             e.command(e_page, ["paste F"+str(events.index(e_o)+1+header_lines)+" formulas"])
             e.command(e_page, ["set G"+str(events.index(e_o)+1+header_lines)+" value n "+str(e_o.persons_needed)])
             e.command(e_page, ["set H"+str(events.index(e_o)+1+header_lines)+" value n "+str(e_o.capable_persons_needed)])
@@ -286,11 +303,17 @@ def update_ethercalc(events, participants):
 
     # assigning events
     for e_a in newly_assigned_events:
-        update_ethercalc_assignments(events=events, header_lines=header_lines, ecalc=e, e_page=e_page, event_to_assign=e_a)
+        update_ethercalc_assignments(events=events, ecalc=e, e_page=e_page, event_to_assign=e_a)
 
     # events with assignment errors
     for e_e in [event for event in events if event.assignment_errors and event not in newly_assigned_events]:
-        update_ethercalc_assignments(events=events, header_lines=header_lines, ecalc=e, e_page=e_page, event_to_assign=e_e)
+        update_ethercalc_assignments(events=events, ecalc=e, e_page=e_page, event_to_assign=e_e)
+
+    # events with reminders resp. check ups sent
+    for e_r in [event for event in events if event.reminders_sent == True and event.reminders_sent_before == False]:
+        e.command(e_page, ["set O"+str(events.index(e_r)+1+header_lines)+" constant nl 1 TRUE"])
+    for e_c in [event for event in events if event.check_ups_sent == True and event.check_ups_sent_before == False]:
+        e.command(e_page, ["set P"+str(events.index(e_c)+1+header_lines)+" constant nl 1 TRUE"])
 
     # formatting
     past_events = [event for event in events if event.date < datetime.date.today()]
@@ -319,7 +342,7 @@ def count_tasks(events, participants): # calculating how many tasks each partici
         delta = datetime.date.today() - p.entry_date
         p.task_count_per_days_since_entry = p.task_count / int(delta.days)
 
-def choose_person(participants, events, to_be_assigned_event, only_if_capable=False, recent_events_factor=0.8):
+def choose_person(participants, events, to_be_assigned_event, only_if_capable=False):
     possible_participants = []
     for p in participants:
         if p.active:
@@ -422,7 +445,7 @@ def read_message_strings(participant):
     if language != 'en' and language != 'de_AT':
         print("Locales for "+str(language)+" not registered, using en instead.")
         language = 'en'
-    with open('locales/'+language+'.json') as json_file:
+    with open('locales/'+language+'.json', encoding='utf-8') as json_file:
         return json.load(json_file), language
 
 def assignment_notification_title(participant, event):
@@ -501,17 +524,23 @@ def send_assignment_notifications():
             print(assignment_notification_title(participant=a_p, event=e))
             print(assignment_notification_content(participant=a_p, event=e))
 
-def send_reminders():
-    for e in newly_assigned_events:
-        for a_p in e.assigned_persons:
-            print(reminder_title(participant=a_p, event=e))
-            print(reminder_content(participant=a_p, event=e))
+def send_reminders(events):
+    events_to_be_reminded_of = [event for event in events if event.date >= datetime.date.today() and event.date <= datetime.date.today() + datetime.timedelta(days=event.task_type.reminder_days_before) and event.reminders_sent == False]
+    for e in events_to_be_reminded_of:
+        if e.assigned_persons:
+            for a_p in e.assigned_persons:
+                print(reminder_title(participant=a_p, event=e))
+                print(reminder_content(participant=a_p, event=e))
+            e.reminders_sent = True
 
-def send_check_ups():
-    for e in newly_assigned_events:
-        for a_p in e.assigned_persons:
-            print(check_up_title(participant=a_p, event=e))
-            print(check_up_content(participant=a_p, event=e))
+def send_check_ups(events):
+    events_to_be_checked_up_on = [event for event in events if event.date < datetime.date.today() and event.check_ups_sent == False]
+    for e in events_to_be_checked_up_on:
+        if e.assigned_persons:
+            for a_p in e.assigned_persons:
+                print(check_up_title(participant=a_p, event=e))
+                print(check_up_content(participant=a_p, event=e))
+            e.check_ups_sent = True
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
@@ -520,10 +549,10 @@ def main():
     events, participants, tasks = load_objects()
     count_tasks(events=events, participants=participants)
     list_and_assign_events(events=events, participants=participants, tasks=tasks)
-    # update_ethercalc(events=events, participants=participants)
     send_assignment_notifications()
-    send_reminders()
-    send_check_ups()
+    send_reminders(events=events)
+    send_check_ups(events=events)
+    update_ethercalc(events=events, participants=participants)
 
     # events = []
     # for i in range(4):
