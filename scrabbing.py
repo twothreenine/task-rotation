@@ -13,7 +13,7 @@ def read_config():
 config = read_config()['foodsoft']
 request_url = config['url'] + 'login'
 login_url = config['url'] + 'sessions'
-request_message_url = config['url'] + 'messages/new?message%5Bmail_to%5D=315'
+request_message_url = config['url'] + 'messages/new'
 send_message_url = config['url'] + 'messages'
 
 with requests.Session() as s:
@@ -46,22 +46,22 @@ with requests.Session() as s:
     token = html.find(attrs={'name':'csrf-token'})['content']
     print(token)
     message = {
-            'utf8': '%25E2%259C%2593',
-            #'authenticity_token':str(token),
-            'message[reply_to]':'',
-            'message[send_methode]':'recipients',
-            'message[workgroup_id]':'1',
-            'message[ordergroup_id]':'162',
-            'message[order_id]':'1472',
-            'message[recipient_tokens]':'315',
-            'message[private]':['0','1'],
-            'message[subject]':'test-subject',
-            'message[body]':'test',
-            'commit':'Nachricht+verschicken'
-            }
+            "utf8":"✓",
+            "message[reply_to]":"",
+            "message[send_method]":"recipients",
+            "message[workgroup_id]":"1",
+            "message[ordergroup_id]":"162",
+            "message[order_id]":"1480",
+            "message[recipient_tokens]":"208,315",
+            "message[private]":["0","1"],
+            "message[subject]":"script-sent",
+            "message[body]":"jetzt scheint es zu funktionieren :)",
+            "commit":"Nachricht+verschicken"}
+    message1["authenticity_token"] = token
     headers['Referer'] = request_message_url
     response = s.post(send_message_url, headers=headers, data=message, cookies=r1.cookies)
     #print(html.contents)
+    #expect 302
     print('Response send message (POST): ' + str(response.status_code))
    
 
