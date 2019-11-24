@@ -42,17 +42,18 @@ class FSConnector:
 
         return response
 
-    def _get_auth_token(self, response):
-        if response is None:
+    def _get_auth_token(self, request_content):
+        if request_content is None:
             logging.error('ERROR failed to fetch authenticity_token')
             return ''
 #        html = bs(response.content, 'html.parser')
 #        auth_token =  html.find(attrs={'name':'authenticity_token'})
 #        return auth_token['value']
-        return bs(response.content, 'html.parser').find(attrs={'name':'authenticity_token'})['value']
+        return bs(request_content, 'html.parser').find(attrs={'name':'authenticity_token'})['value']
 
-    def _post(self, url, header, data, cookie):
-        response = self._session.post(url, headers=header, data=data, cookies=cookie)
+    def _post(self, url, header, data, request):
+        data['authenticity_token'] = self._get_auth_token(request.content)
+        response = self._session.post(url, headers=header, data=data, cookies=request.cookies)
         if response.status_code is not 200: #302
             logging.error('Error ' + str(response.status_code) + ' during POST ' + url)
             raise ConnectionError('Error cannot post to ' + url)
@@ -68,12 +69,11 @@ class FSConnector:
         login_header = self._default_header
 
         self._session = requests.Session()
-        response = self._get(self._url_login_request, login_header)
+        request = self._get(self._url_login_request, login_header)
 
-        self._login_data['authenticity_token'] = self._get_auth_token(response)
         login_header['Referer'] = self._url_login_request
 
-        response = self._post(self._url_login_post, login_header, self._login_data, response.cookies)
+        response = self._post(self._url_login_post, login_header, self._login_data, request)
         logging.debug(user + ' logged in sucessfully to ' + self._url)
         
         
@@ -96,8 +96,8 @@ class FSConnector:
             "commit":"Nachricht+verschicken"
             }
         mail_header["Referer"] = self._url_mail_request
-        response = self._post(self._url_mail_send, mail_header, msg_data, response.cookies)
-        logging.debug("Sent messages to " + ",".join(map(str,userIds)) + " with msg_data: " + dumps(msg_data, indent=2))
+        response = self._post(self._url_mail_send, mail_header, msg_data, response)
+        logging.debug("Sent messages to " + ",".join(map(str,userIds)) + " header= " + str(response.request.headers) + " data= " + str(msg_data))
 
 
 
