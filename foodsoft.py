@@ -75,6 +75,9 @@ class FSConnector:
 
         response = self._post(self._url_login_post, login_header, self._login_data, request)
         logging.debug(user + ' logged in sucessfully to ' + self._url)
+
+    def logout(self):
+        self._session.close()
         
         
     def sendMailToRecipients(self, userIds, data):
