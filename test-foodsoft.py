@@ -9,4 +9,4 @@ def read_config():
 config = read_config()['foodsoft']
 fsc = FSConnector(config['url'], config['user'], config['password'])
 
-fsc.sendMailToRecipients([208], {"subject":"class-subject", "body":"class-body"})
+fsc.sendMailToRecipients([315], {"subject":"class-subject", "body":"class-body"})

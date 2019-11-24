@@ -27,7 +27,7 @@ class FSConnector:
                 'commit' : 'Anmelden'
                 }
 
-        if user is not None and password is not None:
+        if user and password:
             self.login(user, password)
 
     def _get(self, url, header, data=None):
@@ -35,7 +35,7 @@ class FSConnector:
             response = self._session.get(url, headers=header)
         if response.status_code is not 200:
             self._session.close()
-            logging.error('ERROR ' + (response.status_code) + ' during GET ' + url)
+            logging.error('ERROR ' + str(response.status_code) + ' during GET ' + url)
             raise ConnectionError('Cannot get: ' +url)
 
         return response
@@ -72,7 +72,7 @@ class FSConnector:
         login_header['Referer'] = self._url_login_request
 
         response = self._post(self._url_login_post, login_header, self._login_data, response.cookies)
-        logging.debug(user + ' logged in sucessfullly to ' + self._url)
+        logging.debug(user + ' logged in sucessfully to ' + self._url)
         
         
     def sendMailToRecipients(self, userIds, data):

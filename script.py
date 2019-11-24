@@ -6,6 +6,7 @@ import pprint
 import datetime
 import random
 import babel.dates
+from foodsoft import FSConnector
 
 pp = pprint.PrettyPrinter(indent=4)
 config_path = '_credentials/config.json'
@@ -15,12 +16,15 @@ default_language = "en"
 task_group_name = "Task group"
 recent_events_factor = 0.8
 header_lines = 2
+capable_after_task_count = 0
 
 def read_config():
     with open(config_path) as json_file:
         return json.load(json_file)
 
 config = read_config()
+
+fsc = FSConnector(config['foodsoft']['url'], config['foodsoft']['user'], config['foodsoft']['password'])
 
 def excel_date(date1):
     delta = date1 - datetime.date(1899, 12, 30)
@@ -55,16 +59,21 @@ class Event:
         self.check_ups_sent = check_ups_sent
 
 class Participant:
-    def __init__(self, name, capable, active, entry_date, old_task_count, language=None):
+    def __init__(self, name, capable, active, entry_date, old_task_count, language=None, contact_info=None):
         self.name = name
         self.capable = capable
         self.active = active
         self.entry_date = entry_date
         self.active_until = False
         self.old_task_count = old_task_count
+        if capable:
+            self.capable_before = True
+        else:
+            self.capable_before = False
         self.task_count = 0
         self.task_count_per_days_since_entry = False
         self.language = language
+        self.contact_info = contact_info
 
 class Task:
     def __init__(self, type_id, name, start, end, interval_days, persons_needed, capable_persons_needed, assign_for_days, list_for_days, hide_from_days, reminder_days_before, note):
@@ -149,6 +158,10 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, sett
         global header_lines
         header_lines = int(settings_list[3][1])
         print("header lines = "+str(header_lines))
+    if settings_list[4][1]:
+        global capable_after_task_count
+        capable_after_task_count = int(settings_list[4][1])
+        print("capable after task count = "+str(capable_after_task_count))
     events = []
     participants = []
     tasks = []
@@ -174,9 +187,11 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, sett
             old_task_count = 0
         except:
             raise
-        p = Participant(name=row[0], capable=True, active=True, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6])
-        if row[1]=="0": p.capable=False
-        if row[2]=="0": p.active=False
+        capable = True
+        if row[1]=="0": capable=False
+        active = True
+        if row[2]=="0": active=False
+        p = Participant(name=row[0], capable=capable, active=active, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6], contact_info=row[7])
         if row[4]!="": p.active_until=read_date(row[5])
         participants.append(p)
     for row in task_list:
@@ -278,10 +293,12 @@ def update_ethercalc(events, participants):
     # updating participants' task counts and capability
     for p in participants:
         if not p.task_count == p.old_task_count:
-            x = participants.index(p) + 1 + header_lines
-            e.command(p_page, ["set D"+str(x)+" value n "+str(p.task_count)])
-            if not p.capable and p.task_count > p.old_task_count:
-                e.command(p_page, ["set B"+str(x)+" constant nl 1 TRUE"])
+            e.command(p_page, ["set D"+str(participants.index(p) + 1 + header_lines)+" value n "+str(p.task_count)])
+        print(p.capable)
+        print(p.capable_before)
+        if p.capable and not p.capable_before:
+            e.command(p_page, ["set B"+str(participants.index(p) + 1 + header_lines)+" constant nl 1 TRUE"])
+            print(p.name+"'s experience set to TRUE")
 
     # listing events
     if newly_listed_events:
@@ -336,7 +353,7 @@ def count_tasks(events, participants): # calculating how many tasks each partici
     for e in past_events:
         for a_p in e.assigned_persons:
             a_p.task_count += 1
-            if not a_p.capable and a_p.task_count > a_p.old_task_count:
+            if not a_p.capable and capable_after_task_count > 0 and a_p.task_count > capable_after_task_count:
                 a_p.capable = True
     for p in participants:
         delta = datetime.date.today() - p.entry_date
@@ -521,16 +538,24 @@ def check_up_content(participant, event):
 def send_assignment_notifications():
     for e in newly_assigned_events:
         for a_p in e.assigned_persons:
-            print(assignment_notification_title(participant=a_p, event=e))
-            print(assignment_notification_content(participant=a_p, event=e))
+            if a_p.contact_info:
+                title = assignment_notification_title(participant=a_p, event=e)
+                content = assignment_notification_content(participant=a_p, event=e)
+                print(title)
+                print(content)
+                fsc.sendMailToRecipients([int(a_p.contact_info)], {"subject":title, "body":content})
 
 def send_reminders(events):
     events_to_be_reminded_of = [event for event in events if event.date >= datetime.date.today() and event.date <= datetime.date.today() + datetime.timedelta(days=event.task_type.reminder_days_before) and event.reminders_sent == False]
     for e in events_to_be_reminded_of:
         if e.assigned_persons:
             for a_p in e.assigned_persons:
-                print(reminder_title(participant=a_p, event=e))
-                print(reminder_content(participant=a_p, event=e))
+                if a_p.contact_info:
+                    title = reminder_title(participant=a_p, event=e)
+                    content = reminder_content(participant=a_p, event=e)
+                    print(title)
+                    print(content)
+                    fsc.sendMailToRecipients([int(a_p.contact_info)], {"subject":title, "body":content})
             e.reminders_sent = True
 
 def send_check_ups(events):
@@ -538,8 +563,12 @@ def send_check_ups(events):
     for e in events_to_be_checked_up_on:
         if e.assigned_persons:
             for a_p in e.assigned_persons:
-                print(check_up_title(participant=a_p, event=e))
-                print(check_up_content(participant=a_p, event=e))
+                if a_p.contact_info:
+                    title = check_up_title(participant=a_p, event=e)
+                    content = check_up_content(participant=a_p, event=e)
+                    print(title)
+                    print(content)
+                    fsc.sendMailToRecipients([int(a_p.contact_info)], {"subject":title, "body":content})
             e.check_ups_sent = True
 
 def main():
