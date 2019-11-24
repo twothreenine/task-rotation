@@ -86,7 +86,7 @@ class FSConnector:
         response = self._get(self._url_mail_request, mail_header)
 
         msg_data = {
-            "utf8":"✓",
+            "utf8":"%25E2%259C%2593",#"✓",
             "message[reply_to]":"",
             "message[send_method]":"recipients",
             "message[workgroup_id]":"0",
