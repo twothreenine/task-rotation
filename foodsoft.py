@@ -6,6 +6,8 @@ import logging
 import requests
 from bs4 import BeautifulSoup as bs
 
+logging.basicConfig(level=logging.DEBUG)
+
 class FSConnector:
     def __init__(self, url, user=None, password=None):
         self._session = None
@@ -42,7 +44,7 @@ class FSConnector:
 
     def _get_auth_token(self, response):
         if response is None:
-            loggin.error('ERROR failed to fetch authenticity_token')
+            logging.error('ERROR failed to fetch authenticity_token')
             return ''
 #        html = bs(response.content, 'html.parser')
 #        auth_token =  html.find(attrs={'name':'authenticity_token'})
