@@ -9,5 +9,5 @@ def read_config():
 config = read_config()['foodsoft']
 fsc = FSConnector(config['url'], config['user'], config['password'])
 
-fsc.sendMailToRecipients([208], {"subject":"class-subject", "body":"Wie schauts mit Ümläuten aus?\n Und zeilenübrüche?\n\nHö€"})
+fsc.sendMailToRecipients([315], {"subject":"class-subject", "body":"Wie schauts mit Ümläuten aus?\n Und zeilenübrüche?\n\nHö€"})
 fsc.logout()

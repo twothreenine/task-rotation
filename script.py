@@ -97,6 +97,17 @@ class AssignmentError:
         self.assigned_person = assigned_person
         self.error_message = error_message
 
+class Note:
+    def __init__(self, task_types, event_number_in_time_period, time_period_factor, time_period_mode, message):
+        if task_types:
+            self.task_types = task_types.copy()
+        else:
+            self.task_types = []
+        self.event_number_in_time_period = event_number_in_time_period
+        self.time_period_factor = time_period_factor
+        self.time_period_mode = time_period_mode
+        self.message = message
+
 def load_ethercalc(sheet): # returns one of multiple sheets as a nested python list; for the first sheet: sheet=1
     logging.debug("remote host: " + config["host"] + " remote page: " + config["page"] + "." + str(sheet))
     return ethercalc.EtherCalc(config["host"]).export(config["page"] + "." + str(sheet))
@@ -140,9 +151,9 @@ def get_vertical_cells_demo():
 
 """ New class-based approach """
 
-def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, settings_sheet_no=4): # converts rows of the sheets events, participants and tasks into python objects; usually the header consists of 2 rows which have to be ignored (pop)
+def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, settings_sheet_no=4, notes_sheet_no=5): # converts rows of the sheets events, participants and tasks into python objects; usually the header consists of 2 rows which have to be ignored (pop)
     settings_list = load_ethercalc(sheet=settings_sheet_no)
-    for i in range(2):
+    for i in range(header_lines):
         settings_list.pop(0)
     if settings_list[0][1]:
         global default_language
@@ -162,25 +173,33 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, sett
         global capable_after_task_count
         capable_after_task_count = int(settings_list[4][1])
         print("capable after task count = "+str(capable_after_task_count))
+
     events = []
     participants = []
     tasks = []
-    particiant_list = load_ethercalc(sheet=participant_sheet_no)
-    for i in range(2):
-        particiant_list.pop(0)
-    while particiant_list[-1][0] == "":
-        particiant_list.pop(-1)
+    notes = []
+    participant_list = load_ethercalc(sheet=participant_sheet_no)
+    for i in range(header_lines):
+        participant_list.pop(0)
+    while participant_list[-1][0] == "":
+        participant_list.pop(-1)
     event_list = load_ethercalc(sheet=event_sheet_no)
-    for i in range(2):
+    for i in range(header_lines):
         event_list.pop(0)
     while event_list and event_list[-1] and event_list[-1][0] == None:
         event_list.pop(-1)
     task_list = load_ethercalc(sheet=task_sheet_no)
-    for i in range(2):
+    for i in range(header_lines):
         task_list.pop(0)
     while task_list[-1][0] == None:
         task_list.pop(-1)
-    for row in particiant_list:
+    note_list = load_ethercalc(sheet=notes_sheet_no)
+    for i in range(header_lines):
+        note_list.pop(0)
+    while note_list[-1][1] == None:
+        note_list.pop(-1)
+
+    for row in participant_list:
         try:
             old_task_count = int(row[3])
         except TypeError:
@@ -194,9 +213,20 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, sett
         p = Participant(name=row[0], capable=capable, active=active, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6], contact_info=row[7])
         if row[4]!="": p.active_until=read_date(row[5])
         participants.append(p)
+
     for row in task_list:
         t = Task(type_id=row[0], name=row[1], start=read_date(row[2]), end=read_date(row[3]), interval_days=row[4], persons_needed=int(row[5]), capable_persons_needed=int(row[6]), assign_for_days=row[7], list_for_days=row[8], hide_from_days=row[9], reminder_days_before=row[10], note=row[11])
         tasks.append(t)
+
+    for row in note_list:
+        task_types = []
+        if row[0]:
+            task_type_ids = list(str(row[0]).split(";"))
+            for tt in task_type_ids:
+                task_types.append(next((task for task in tasks if task.type_id == float(tt)), None))
+        n = Note(task_types=task_types, event_number_in_time_period=int(row[1]), time_period_factor=row[2], time_period_mode=row[3], message=row[4])
+        notes.append(n)
+
     for row in event_list:
         assigned_persons = []
         assignment_errors = []
@@ -240,7 +270,8 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, sett
         if row[15] == "1": check_ups_sent = True
         e = Event(date=read_date(row[0]), task_type=task_type, event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[6]), capable_persons_needed=int(row[7]), assigned_persons=assigned_persons, note=row[13], assignment_errors=assignment_errors, reminders_sent=reminders_sent, check_ups_sent=check_ups_sent)
         events.append(e)
-    return events, participants, tasks
+
+    return events, participants, tasks, notes
 
 def assigned_persons_column_letter(person_count):
     if person_count == 0:
@@ -403,7 +434,7 @@ def choose_person(participants, events, to_be_assigned_event, only_if_capable=Fa
         error = AssignmentError(error_type="No "+capable_text+"active participants", assigned_person_no=assign_person_count, assigned_person="", error_message="No "+other_text+capable_text+"active participants")
         to_be_assigned_event.assignment_errors.append(error)
 
-def list_and_assign_events(events, participants, tasks):
+def list_and_assign_events(events, participants, tasks, notes):
     to_be_assigned_events = []
     for t in tasks:
         t_events = sorted([event for event in events if event.task_type == t], key=lambda e: (e.regular_date))
@@ -430,6 +461,100 @@ def list_and_assign_events(events, participants, tasks):
         for t_e in t_events:
             if t_e.date >= datetime.date.today() and t_e.regular_date <= datetime.date.today() + datetime.timedelta(days=t.assign_for_days) and t_e.assigned_persons==[] and t_e.persons_needed>0 and t_e.assignment_errors==[]:
                 to_be_assigned_events.append(t_e)
+
+    for n in notes:
+        if n.task_types:
+            concerned_events = [event for event in newly_listed_events if event.task_type in n.task_types]
+        else:
+            concerned_events = newly_listed_events
+        for t in tasks:
+            concerned_events = [event for event in concerned_events if event.task_type == t]
+            events_of_this_type = [event for event in events if event.task_type == t]
+            if concerned_events:
+                latest_event = concerned_events[-1]
+            else:
+                continue
+            time_periods_since_start = []
+            if n.time_period_mode == "month":
+                first_month = int(t.start.month + n.time_period_factor - 1)
+                first_year = t.start.year
+                if n.event_number_in_time_period < 0:
+                    first_month += 1
+                while first_month > 12:
+                    first_year += 1
+                    first_month -= 12
+                last_date = datetime.date(year=first_year, month=first_month, day=1)
+                time_periods_since_start.append(last_date)
+                while last_date < latest_event.date:
+                    next_month = int(last_date.month + n.time_period_factor)
+                    next_year = last_date.year
+                    while next_month > 12:
+                        next_year += 1
+                        next_month -= 12
+                    last_date = datetime.date(year=next_year, month=next_month, day=1)
+                    time_periods_since_start.append(last_date)
+            elif n.time_period_mode == "year":
+                first_year = int(t.start.year + n.time_period_factor - 1)
+                if n.event_number_in_time_period < 0:
+                    first_year += 1
+                last_date = datetime.date(year=first_year, month=1, day=1)
+                time_periods_since_start.append(last_date)
+                while last_date < latest_event.date:
+                    next_year = int(last_date.year + n.time_period_factor)
+                    last_date = datetime.date(year=next_year, month=1, day=1)
+                    time_periods_since_start.append(last_date)
+            # elif n.time_period_mode == "week":
+            #     first_week = int(int(t.start.strftime('%W'))+1 + n.time_period_factor - 1)
+            #     first_year = t.start.year
+            #     if n.event_number_in_time_period < 0:
+            #         first_week += 1
+            #     while first_week > int(datetime.date(year=first_year, month=12, day=31).strftime('%W'))+1:
+            #         first_week -= int(datetime.date(year=first_year, month=12, day=31).strftime('%W'))+1
+            #         first_year += 1
+            #     last_date = datetime.datetime.strptime(f'{first_year}-W{int(first_week )- 1}-1', "%Y-W%W-%w").date()
+            #     time_periods_since_start.append(last_date)
+            #     while last_date < latest_event.date:
+            #         next_week = int(int(t.start.strftime('%W'))+1 + n.time_period_factor)
+            #         next_year = last_date.year
+            #         while next_week > int(datetime.date(year=first_year, month=12, day=31).strftime('%W'))+1:
+            #             next_week -= int(datetime.date(year=first_year, month=12, day=31).strftime('%W'))+1
+            #             next_year += 1
+            #         last_date = datetime.datetime.strptime(f'{next_year}-W{int(next_week )- 1}-1', "%Y-W%W-%w").date()
+            #         time_periods_since_start.append(last_date)
+            elif n.time_period_mode == "day":
+                last_date = t.start + datetime.timedelta(days=int(n.time_period_factor) - 1)
+                if n.event_number_in_time_period < 0:
+                    last_date += datetime.timedelta(days=1)
+                time_periods_since_start.append(last_date)
+                while last_date < latest_event.date:
+                    last_date += datetime.timedelta(days=int(n.time_period_factor))
+                    time_periods_since_start.append(last_date)
+            else:
+                break
+            for c_e in concerned_events:
+                previous_time_periods = [t_p for t_p in time_periods_since_start if t_p < c_e.date]
+                if previous_time_periods:
+                    concerned_time_period = max(previous_time_periods)
+                else:
+                    continue
+                if n.event_number_in_time_period > 0:
+                    events_in_time_period = sorted([event for event in events_of_this_type if event.date >= concerned_time_period], key=lambda x: x.date)
+                    if len(events_in_time_period) >= n.event_number_in_time_period:
+                        event_to_alter = events_in_time_period[n.event_number_in_time_period-1]
+                        if c_e == event_to_alter:
+                            if c_e.note:
+                                c_e.note += "; "
+                            c_e.note += n.message
+                elif n.event_number_in_time_period < 0:
+                    subsequent_time_periods = [t_p for t_p in time_periods_since_start if t_p not in previous_time_periods]
+                    if subsequent_time_periods:
+                        concerned_time_period = min(subsequent_time_periods)
+                    else:
+                        continue
+                    if c_e.date + n.event_number_in_time_period*(-1)*datetime.timedelta(days=t.interval_days) >= concerned_time_period and c_e.date + (n.event_number_in_time_period*(-1)-1) * datetime.timedelta(days=t.interval_days) < concerned_time_period:
+                        if c_e.note:
+                            c_e.note += "; "
+                        c_e.note += n.message
     
     for to_be_assigned_event in to_be_assigned_events:
         for p in range(to_be_assigned_event.capable_persons_needed):
@@ -575,13 +700,15 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("Enter Main()")
 
-    events, participants, tasks = load_objects()
+    events, participants, tasks, notes = load_objects()
     count_tasks(events=events, participants=participants)
-    list_and_assign_events(events=events, participants=participants, tasks=tasks)
+    list_and_assign_events(events=events, participants=participants, tasks=tasks, notes=notes)
     send_assignment_notifications()
     send_reminders(events=events)
     send_check_ups(events=events)
     update_ethercalc(events=events, participants=participants)
+
+    fsc.logout()
 
     # events = []
     # for i in range(4):

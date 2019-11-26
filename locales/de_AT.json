@@ -7,7 +7,7 @@
 "assignment_notification_text": "dir wurde{other_assigned_persons} die Verantwortung für die Aufgabe {task_name} am {event_date} zugeteilt.\nNotier dir den Termin am besten gleich, du bekommst aber {reminder_days_before} Tage vorher noch eine Erinnerungsmail.",
 "other_assigned_persons": ", zusammen mit {other_assigned_persons_list},",
 "substitution_note": "Falls du den Termin nicht selbst übernehmen kannst, kümmere dich bitte um Ersatz.",
-"reminder_title": "Erinnerung: du bist verantwortlich für {task_name} am {event_date}",
+"reminder_title": "Erinnerung: Du bist verantwortlich für {task_name} am {event_date}",
 "reminder_text": "kommenden {event_date} trägst du{other_assigned_persons} die Verantwortung für die Aufgabe {task_name}.",
 "please_note": "Bitte beachten: ",
 "please_note_for_this_event": "Für diesen Termin bitte beachten: ",
