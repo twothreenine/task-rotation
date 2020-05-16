@@ -3,52 +3,48 @@ import ethercalc
 import json
 import logging
 import pprint
+import os
 import script
 
 pp = pprint.PrettyPrinter(indent=4)
 config = script.read_config()
 language = None
 
-with open('default_sheets.json') as json_file:
-    default_sheets = json.load(json_file)
-
-def test():
-    # test_sheet = script.load_ethercalc(host=default_sheets[language]["host"], page=default_sheets[language]["page"])
-    default_sheet_page = default_sheets[language]["page"]
-    default_sheet_host = default_sheets[language]["host"]
+def initialize(language):
+    with open('locales/'+language+'/locales.json', encoding='utf-8') as json_file:
+        locales = json.load(json_file)
     new_sheet_host = ethercalc.EtherCalc(config["host"])
-    base_sheet = script.load_ethercalc(host=default_sheet_host, page=default_sheet_page)
     for i in range(5):
-        new_sheet_host.command(config["page"], ["set A"+str(i+2)+" text t /"+config["page"]+"."+str(i+1)])
-        new_sheet_host.command(config["page"], ["set B"+str(i+2)+" text t "+base_sheet[i+1][1]])
-    notes_sheet = script.load_ethercalc(host=default_sheet_host, page=default_sheet_page, sheet=4, export_format="socialcalc")
-    # pp.pprint(events_sheet)
-    new_sheet_host.create(notes_sheet, format="socialcalc", id=config["page"]+".4")
-
-    # pane row 3 (all tables)
-    # insert formula for calender week + weekday
-
-    # default_sheet_host.command(default_sheet_page+".1", ["copy A1:W3 formulas"])
-    # new_sheet_host.command(config["page"]+".1", ["paste A1 formulas"])
+        no = i + 1
+        new_sheet_host.command(config["page"], ["set A"+str(no+1)+" text t /"+config["page"]+"."+str(no)])
+        new_sheet_host.command(config["page"], ["set B"+str(no+1)+" text t "+locales["sheet"+str(no)]])
+        with open('locales/'+language+"/sheet"+str(no)+".txt", "r", encoding='utf-8') as text_file:
+            sheet = text_file.read()
+        print(sheet)
+        new_sheet_host.update(sheet, format="socialcalc", id=config["page"]+"."+str(no))
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("Enter Main()")
 
-    global language
-    if default_sheets:
-        if len(default_sheets) > 1:
-            default_sheets_str = ""
-            print("You are about to initialize an empty sheet at "+config["host"]+"/="+config["page"]+". \nRegistered default sheet languages: "+script.dict_str(any_dict=default_sheets)) # 
+    default_sheet_languages = []
+    folders = os.listdir('locales/')
+    for folder in folders:
+        if os.path.isfile("locales/"+folder+"/sheet1.txt"):
+            default_sheet_languages.append(folder)
+
+    if default_sheet_languages:
+        if len(default_sheet_languages) > 1:
+            print("You are about to initialize an empty sheet at "+config["host"]+"/="+config["page"]+". \nFound default sheet languages: "+script.semicolon_separated_list_from_python_list(any_list=default_sheet_languages)) # 
             language = input("To continue, please enter in which of the languages above you want the sheet to be: ")
-            while language not in default_sheets:
-                language = input("Chosen language not registered. Try again: ")
+            while language not in default_sheet_languages:
+                language = input("Chosen language not found. Try again: ")
         else:
-            language = default_sheets[0]
-        # TODO
-        test()
+            language = default_sheet_languages[0]
+        initialize(language=language)
     else:
-        print("No default sheet languages registered.")
+        print("No locales with default sheets found.")
+
 
 if __name__== "__main__":
     main()

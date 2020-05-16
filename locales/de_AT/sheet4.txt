@@ -1,0 +1,57 @@
+socialcalc:version:1.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=SocialCalcSpreadsheetControlSave
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+# SocialCalc Spreadsheet Control Save
+version:1.0
+part:sheet
+part:edit
+part:audit
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+version:1.5
+cell:A1:vtc:::
+cell:B1:vtc:::
+cell:C1:vtc::::cf:2
+cell:D1:vtc:::
+cell:E1:vtc:::
+cell:F1:vtc:::
+cell:G1:vtc::::cf:1
+cell:H1:vtc:::
+cell:I1:vtc:::
+cell:A2:t:ID
+cell:B2:t:Aufgabentypen IDs (optional, wenn nicht alle; z.B. 1;3;4)
+cell:C2:t:Beginn:cf:1
+cell:D2:t:Ende
+cell:E2:t:Faktor für Zeitperiode (alle ... Tage/ Monate/ Jahre)
+cell:F2:t:Zeitperiode (day, month, year)
+cell:G2:t:x-te Termin(e) in Zeitperiode (2 = zweiter, -1 = letzter, 1;3;5 etc.):cf:1
+cell:H2:t:Wochentag-Filter (optional, nur bei month/year; z.B. monday, friday;saturday etc.)
+cell:I2:t:Text, der zu den Hinweisen des Termins hinzugefügt werden soll
+col:A:w:72
+col:B:w:125
+col:C:w:157
+col:D:w:86
+col:E:w:107
+col:F:w:115
+col:H:w:105
+col:I:w:335
+sheet:c:9:r:2:tvf:1
+cellformat:1:left
+cellformat:2:right
+valueformat:1:text-wiki
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+version:1.0
+rowpane:0:1:2
+rowpane:1:3:1
+colpane:0:1:1
+ecell:A1
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+--SocialCalcSpreadsheetControlSave--

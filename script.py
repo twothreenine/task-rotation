@@ -5,8 +5,10 @@ import logging
 import pprint
 import datetime
 import random
+import os
 import babel.dates
 from foodsoft import FSConnector
+import export
 
 pp = pprint.PrettyPrinter(indent=4)
 config_path = '_credentials/config.json'
@@ -23,6 +25,8 @@ task_group_name = "Task group"
 recent_events_factor = 0.8
 header_lines = 2
 capable_after_task_count = 0
+save_backup_before_for_sheet_nos = []
+save_backup_after_for_sheet_nos = []
 
 def read_config():
     with open(config_path) as json_file:
@@ -48,13 +52,18 @@ def semicolon_separated_list_from_python_list(any_list, attribute=None):
                 csl += ";" + str(item)
     return csl
 
-def python_list_from_semicolon_separated_list(any_list, data_type="str"):
+def python_list_from_semicolon_separated_list(any_list, data_type="str", convert_none_from_str=False):
     new_list = []
     if any_list:
         if ";" in str(any_list):
             new_list = list(map(eval(data_type), any_list.split(";")))
         else:
             new_list = [eval(data_type+"(any_list)")]
+    # if convert_none_from_str:
+    #     for item in new_list:
+    #         if item == "None":
+    #             item = None
+    #     pp.pprint(new_list)
     return new_list
 
 def dict_str(any_dict):
@@ -107,6 +116,16 @@ def read_weekdays(weekdays_str):
     if weekdays == []:
         weekdays = [1, 2, 3, 4, 5, 6, 7]
     return weekdays
+
+def save_backup(sheet_nos, note=""):
+    folder = config["page"] + " " + datetime.date.today().isoformat()
+    tested_number = 1
+    if os.path.exists("exported_sheets/"+folder+" "+note):
+        tested_number += 1
+        while os.path.exists("exported_sheets/"+folder+" ("+str(tested_number)+") "+note):
+            tested_number += 1
+        folder += " (" + str(tested_number) + ")"
+    export.export(host=config["host"], page=config["page"], sheets=sheet_nos, folder=folder+" "+note)
 
 class Event:
     def __init__(self, date, task_type, event_no, regular_date, persons_needed, capable_persons_needed, event_number_in_time_period, note_types, note_numbers_in_time_period, note_time_period_start_dates, hidden, assigned_persons=[], note="", assignment_errors=[], reminders_sent=False, check_ups_sent=False, time_period_start_date=None):
@@ -226,6 +245,12 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         global capable_after_task_count
         capable_after_task_count = int(settings_list[5][2])
         print("capable after task count = "+str(capable_after_task_count))
+    if settings_list[6][2]:
+        global save_backup_before_for_sheet_nos
+        save_backup_before_for_sheet_nos = python_list_from_semicolon_separated_list(any_list=settings_list[6][2], convert_none_from_str=True)
+    if settings_list[7][2]:
+        global save_backup_after_for_sheet_nos
+        save_backup_after_for_sheet_nos = python_list_from_semicolon_separated_list(any_list=settings_list[7][2], convert_none_from_str=True)
 
     global events
     global participants
@@ -335,6 +360,9 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
             note_time_period_start_dates.append(read_date(d))
         e = Event(date=read_date(row[0]), task_type=task_type, event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[7]), capable_persons_needed=int(row[8]), assigned_persons=assigned_persons, event_number_in_time_period=int(row[17]), time_period_start_date=read_date(row[18]), note_types=note_types, note_numbers_in_time_period=note_numbers_in_time_period, note_time_period_start_dates=note_time_period_start_dates, hidden=hidden, note=row[14], assignment_errors=assignment_errors, reminders_sent=reminders_sent, check_ups_sent=check_ups_sent)
         events.append(e)
+
+    if save_backup_before_for_sheet_nos:
+        save_backup(sheet_nos=save_backup_before_for_sheet_nos, note="before")
 
 def assigned_persons_column_letter(person_count):
     if person_count == 0:
@@ -476,6 +504,9 @@ def update_ethercalc():
     for event in events_to_mark:
         row = str(header_lines+events.index(event)+1)
         e.command(e_page, ["set A"+row+":W"+row+" bgcolor rgb(255, 255, 0)"])
+
+    if save_backup_after_for_sheet_nos:
+        save_backup(sheet_nos=save_backup_after_for_sheet_nos, note="after")
 
 def count_tasks(): # calculating how many tasks each participant has done
     global events
@@ -851,17 +882,15 @@ def list_and_assign_events():
             choose_person(to_be_assigned_event=to_be_assigned_event)
         newly_assigned_events.append(to_be_assigned_event)
 
-registered_languages = python_list_from_semicolon_separated_list(any_list=config['registered_languages'])
-
 def read_message_strings(participant):
     if participant.language:
         language = participant.language
     else:
         language = default_language
-    if language not in registered_languages:
-        print("Locales for "+str(language)+" not registered, using en instead.")
+    if not os.path.exists('locales/'+language):
+        print("Locales for "+str(language)+" not found, using en instead.")
         language = 'en'
-    with open('locales/'+language+'.json', encoding='utf-8') as json_file:
+    with open('locales/'+language+'/locales.json', encoding='utf-8') as json_file:
         return json.load(json_file), language
 
 def days_ago(strings, event):

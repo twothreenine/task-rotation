@@ -1,0 +1,43 @@
+socialcalc:version:1.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=SocialCalcSpreadsheetControlSave
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+# SocialCalc Spreadsheet Control Save
+version:1.0
+part:sheet
+part:edit
+part:audit
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+version:1.5
+cell:A2:t:Name
+cell:B2:t:kennt sich aus?:comment:TRUE / FALSE
+cell:C2:t:aktiv?:comment:TRUE / FALSE
+cell:D2:t:Anzahl Dienste bisher:comment:wird bei Ausführung des Skriptes automatisch aktualisiert
+cell:E2:t:Eintrittsdatum
+cell:F2:t:Aktiv bis (optional)
+cell:G2:t:Sprache für Nachrichten (optional en, de_AT)
+cell:H2:t:Kontaktinfo
+col:A:w:133
+col:B:w:102
+col:E:w:107
+col:F:w:109
+col:G:w:151
+col:H:w:108
+sheet:c:8:r:2:tvf:1
+valueformat:1:text-wiki
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+version:1.0
+rowpane:0:1:2
+rowpane:1:3:1
+colpane:0:1:1
+ecell:A1
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+--SocialCalcSpreadsheetControlSave--

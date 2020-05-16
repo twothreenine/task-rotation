@@ -1,4 +1,9 @@
 {
+"sheet1": "Events",
+"sheet2": "Participants",
+"sheet3": "Task types",
+"sheet4": "Notes",
+"sheet5": "Settings",
 "hello":"Hi {participant_name},",
 "bye":"Sent automatically by {task_group_name} bot",
 "and": " and ",
