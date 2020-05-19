@@ -1,0 +1,99 @@
+socialcalc:version:1.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=SocialCalcSpreadsheetControlSave
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+# SocialCalc Spreadsheet Control Save
+version:1.0
+part:sheet
+part:edit
+part:audit
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+version:1.5
+cell:A1:vtc::::cf:1
+cell:B1:vtc:::
+cell:C1:vtc::::cf:1
+cell:D1:vtc:::
+cell:E1:vtc::::cf:1
+cell:F1:vtc:::
+cell:A2:t:Code name (hide):cf:1
+cell:B2:vtc:::
+cell:C2:t:Current setting:cf:1
+cell:D2:t:Possible settings
+cell:E2:t:Recommended setting:cf:1
+cell:F2:t:Explanation
+cell:A3:vtc::::cf:1
+cell:B3:t:Version
+cell:C3:t:0.1:cf:1
+cell:D3:vtc:::
+cell:E3:vtc::::cf:1
+cell:F3:t:Number of used script/sheet version
+cell:A4:t:header_lines:cf:1
+cell:B4:t:Number of header lines
+cell:C4:v:2:cf:1
+cell:D4:t:x >= 0
+cell:E4:v:2:cf:1
+cell:F4:t:Number of rows above the first regular entry of each table. Adjust this setting when you add or delete header lines.
+cell:G4:cf:1
+cell:A5:vtc:::
+cell:B5:t:Default language
+cell:C5:t:en:cf:1
+cell:D5:t:de_AT;en
+cell:E5:vtc::::cf:1
+cell:F5:t:Language in which notification e-mails are sent, if the addressed participant has not chosen one themself
+cell:A6:vtc:::
+cell:B6:t:Name of this task group
+cell:C6:t:Unnamed group:cf:1
+cell:D6:vtc:::
+cell:E6:vtc::::cf:1
+cell:F6:t:Will appear in the notification e-mails
+cell:A7:vtc:::
+cell:B7:t:Recent events factor
+cell:C7:v:0.8:cf:1
+cell:D7:t:0 < x < 1
+cell:E7:v:0.8:cf:1
+cell:F7:t:In order for participants not being assigned again overproportionally soon (relative to total number of active participants). The lower this parameter, the sooner participants are preferred to be assigned again, if their relation of task count to term of membership is lower than that of others in said selection.
+cell:A8:vtc:::
+cell:B8:t:Min task count for capability
+cell:C8:v:1:cf:1
+cell:D8:t:x >= 0
+cell:E8:v:1:cf:1
+cell:F8:t:Number of completed (past) tasks after which a participant is automatically set as capable. 0 = participant's capability not automatically updated
+cell:B9:t:Save backup before running script for sheets ...
+cell:C9:t:1;2
+cell:D9:t:semicolon separated list of sheet numbers (None, 1-5) or empty
+cell:E9:t:1;2
+cell:F9:t:Creates a folder in exported_sheets/ with the chosen sheets in socialcalc format. Sheet 1 = "Events" sheet etc. Sheet None is the underlying base sheet, accessible if you remove the "=" from the URL.
+cell:B10:t:Save backup after running script for sheets ...
+cell:C10:t:None;1;2;3;4;5
+cell:D10:t:semicolon separated list of sheet numbers (None, 1-5) or empty
+cell:E10:t:None;1;2;3;4;5
+cell:F10:t:Creates a folder in exported_sheets/ with the chosen sheets in socialcalc format. Sheet 1 = "Events" sheet etc. Sheet None is the underlying base sheet, accessible if you remove the "=" from the URL.
+col:A:w:115
+col:A:hide:yes
+col:B:w:145
+col:C:w:125
+col:D:w:120
+col:E:w:126
+col:F:w:353
+col:G:w:84
+col:H:w:98
+col:I:w:319
+sheet:c:9:r:10:tvf:1
+cellformat:1:left
+valueformat:1:text-wiki
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+version:1.0
+rowpane:0:1:2
+rowpane:1:3:1
+colpane:0:1:1
+ecell:B1
+--SocialCalcSpreadsheetControlSave
+Content-type: text/plain; charset=UTF-8
+
+--SocialCalcSpreadsheetControlSave--

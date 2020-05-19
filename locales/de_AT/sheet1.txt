@@ -21,7 +21,7 @@ cell:D2:t:Reguläres Datum (optional ausblenden)
 cell:E2:t:Wochentag:ntvf:1
 cell:F2:t:Kalenderwoche
 cell:G2:t:Aufgabe
-cell:H2:t:Anzahl benötigte Personen
+cell:H2:t:Anzahl benötigte Personen (insg.)
 cell:I2:t:Anzahl benötigte Personen, die sich auskennen
 cell:J2:t:Person 1
 cell:K2:t:Person 2

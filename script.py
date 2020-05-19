@@ -11,7 +11,7 @@ from foodsoft import FSConnector
 import export
 
 pp = pprint.PrettyPrinter(indent=4)
-config_path = '_credentials/config.json'
+calc = {"host": "", "page": "", "name": ""}
 events = []
 participants = []
 tasks = []
@@ -29,12 +29,13 @@ save_backup_before_for_sheet_nos = []
 save_backup_after_for_sheet_nos = []
 
 def read_config():
-    with open(config_path) as json_file:
+    with open('_credentials/config.json') as json_file:
         return json.load(json_file)
 
 config = read_config()
 
 fsc = FSConnector(config['foodsoft']['url'], config['foodsoft']['user'], config['foodsoft']['password'])
+
 
 def semicolon_separated_list_from_python_list(any_list, attribute=None):
     csl = ""
@@ -118,14 +119,14 @@ def read_weekdays(weekdays_str):
     return weekdays
 
 def save_backup(sheet_nos, note=""):
-    folder = config["page"] + " " + datetime.date.today().isoformat()
+    folder = calc["name"] + " " + datetime.date.today().isoformat()
     tested_number = 1
     if os.path.exists("exported_sheets/"+folder+" "+note):
         tested_number += 1
         while os.path.exists("exported_sheets/"+folder+" ("+str(tested_number)+") "+note):
             tested_number += 1
         folder += " (" + str(tested_number) + ")"
-    export.export(host=config["host"], page=config["page"], sheets=sheet_nos, folder=folder+" "+note)
+    export.export(host=calc["host"], page=calc["page"], sheets=sheet_nos, folder=folder+" "+note)
 
 class Event:
     def __init__(self, date, task_type, event_no, regular_date, persons_needed, capable_persons_needed, event_number_in_time_period, note_types, note_numbers_in_time_period, note_time_period_start_dates, hidden, assigned_persons=[], note="", assignment_errors=[], reminders_sent=False, check_ups_sent=False, time_period_start_date=None):
@@ -206,7 +207,16 @@ class Note:
         self.message = message
         self.weekday_filter = weekday_filter
 
-def load_ethercalc(host=config["host"], page=config["page"], sheet=None, export_format="python"): # returns one of multiple sheets as a nested python list; for the first sheet: sheet=1
+def load_calc_data(file_name):
+    global calc
+    with open('_credentials/calc_urls/'+file_name+".json") as json_file:
+        calc = json.load(json_file)
+
+def load_ethercalc(host=None, page=None, sheet=None, export_format="python"): # returns one of multiple sheets as a nested python list; for the first sheet: sheet=1
+    if not host:
+        host = calc["host"]
+    if not page:
+        page = calc["page"]
     if sheet:
         sheet_str = "." + str(sheet)
     else:
@@ -412,9 +422,9 @@ def update_ethercalc():
     global events
     global participants
 
-    e = ethercalc.EtherCalc(config["host"])
-    e_page = config["page"]+".1"
-    p_page = config["page"]+".2"
+    e = ethercalc.EtherCalc(calc["host"])
+    e_page = calc["page"]+".1"
+    p_page = calc["page"]+".2"
 
     # updating participants' task counts and capability
     for p in participants:
@@ -484,12 +494,6 @@ def update_ethercalc():
     for e_e in [event for event in events if event.assignment_errors and event not in newly_assigned_events]:
         update_ethercalc_assignments(ecalc=e, e_page=e_page, event_to_assign=e_e)
 
-    # events with reminders resp. check ups sent (moved to for loop above, e_o in events_to_overwrite)
-    for e_r in [event for event in events if event.reminders_sent == True and event.reminders_sent_before == False]:
-        e.command(e_page, ["set P"+str(events.index(e_r)+1+header_lines)+" constant nl 1 TRUE"])
-    for e_c in [event for event in events if event.check_ups_sent == True and event.check_ups_sent_before == False]:
-        e.command(e_page, ["set Q"+str(events.index(e_c)+1+header_lines)+" constant nl 1 TRUE"])
-
     # formatting
     past_events = [event for event in events if event.date < datetime.date.today()]
     events_to_hide = [event for event in events if event.date < datetime.date.today() - datetime.timedelta(days=event.task_type.hide_from_days) or event.hidden == True]
@@ -507,6 +511,15 @@ def update_ethercalc():
 
     if save_backup_after_for_sheet_nos:
         save_backup(sheet_nos=save_backup_after_for_sheet_nos, note="after")
+
+def update_ethercalc_messages_sent():
+    e = ethercalc.EtherCalc(calc["host"])
+    e_page = calc["page"]+".1"
+    # events with reminders resp. check ups sent (moved to for loop above, e_o in events_to_overwrite)
+    for e_r in [event for event in events if event.reminders_sent == True and event.reminders_sent_before == False]:
+        e.command(e_page, ["set P"+str(events.index(e_r)+1+header_lines)+" constant nl 1 TRUE"])
+    for e_c in [event for event in events if event.check_ups_sent == True and event.check_ups_sent_before == False]:
+        e.command(e_page, ["set Q"+str(events.index(e_c)+1+header_lines)+" constant nl 1 TRUE"])
 
 def count_tasks(): # calculating how many tasks each participant has done
     global events
@@ -989,7 +1002,7 @@ def assignment_notification_content(participant, event):
         strings['substitution_note'] + "\n" + \
         please_note + please_note_for_this_event + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
-        config['host'] + "/=" + config['page']
+        calc['host'] + "/=" + calc['page']
     return message
 
 def reminder_content(participant, event):
@@ -1001,7 +1014,7 @@ def reminder_content(participant, event):
         strings['substitution_note'] + "\n" + \
         please_note + please_note_for_this_event + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
-        config['host'] + "/=" + config['page']
+        calc['host'] + "/=" + calc['page']
     return message
 
 def check_up_content(participant, event):
@@ -1010,7 +1023,7 @@ def check_up_content(participant, event):
     message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
         strings['check_up_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
-        config['host'] + "/=" + config['page']
+        calc['host'] + "/=" + calc['page']
     return message
 
 def send_assignment_notifications():
@@ -1045,17 +1058,67 @@ def send_check_ups():
                     fsc.sendMailToRecipients([int(a_p.contact_info)], {"subject":title, "body":content})
             e.check_ups_sent = True
 
+def reset_global_values():
+    global calc
+    calc = {}
+    global events
+    events = []
+    global participants
+    participants = []
+    global tasks
+    tasks = []
+    global notes
+    notes = []
+    global newly_calculated_events
+    newly_calculated_events = []
+    global newly_listed_events
+    newly_listed_events = []
+    global newly_assigned_events
+    newly_assigned_events = []
+    global events_with_newly_attached_note
+    events_with_newly_attached_note = []
+    global default_language
+    default_language = "en"
+    global task_group_name
+    task_group_name = "Task group"
+    global recent_events_factor
+    recent_events_factor = 0.8
+    global header_lines
+    header_lines = 2
+    global capable_after_task_count
+    capable_after_task_count = 0
+    global save_backup_before_for_sheet_nos
+    save_backup_before_for_sheet_nos = []
+    global save_backup_after_for_sheet_nos
+    save_backup_after_for_sheet_nos = []
+
+def run_script_for_calc(file_name):
+    load_calc_data(file_name=file_name)
+    load_objects()
+    count_tasks()
+    list_and_assign_events()
+    update_ethercalc()
+    send_assignment_notifications()
+    send_reminders()
+    send_check_ups()
+    update_ethercalc_messages_sent()
+    reset_global_values()
+
+def list_calc_url_files():
+    calc_url_files = os.listdir('_credentials/calc_urls/')
+    file_names = []
+    for file in calc_url_files:
+        file_names.append(file[:-5])
+    return file_names
+
 def main():
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("Enter Main()")
 
-    load_objects()
-    count_tasks()
-    list_and_assign_events()
-    send_assignment_notifications()
-    send_reminders()
-    send_check_ups()
-    update_ethercalc()
+    calc_url_files = list_calc_url_files()
+    for file_name in calc_url_files:
+        run_script_for_calc(file_name=file_name)
+
     fsc.logout()
 
 if __name__== "__main__":

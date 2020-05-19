@@ -41,7 +41,7 @@ cell:G4:cf:1
 cell:A5:vtc:::
 cell:B5:t:Standardsprache
 cell:C5:t:de_AT:cf:1
-cell:D5:t:en, de_AT
+cell:D5:t:de_AT;en
 cell:E5:vtc::::cf:1
 cell:F5:t:Sprache, in der Benachrichtigungs-Mails versandt werden, wenn von adressierter Teilnehmer*in nicht selbst festgelegt
 cell:A6:vtc:::
@@ -76,7 +76,7 @@ col:A:w:115
 col:A:hide:yes
 col:B:w:145
 col:C:w:119
-col:D:w:120
+col:D:w:131
 col:E:w:113
 col:F:w:353
 col:G:w:84

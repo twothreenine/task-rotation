@@ -19,7 +19,7 @@ cell:C2:t:active?:comment:TRUE / FALSE
 cell:D2:t:Task count:comment:will be updated automatically by script
 cell:E2:t:Entry date
 cell:F2:t:Active until (optional)
-cell:G2:t:Language for messages (optionally en, de_AT)
+cell:G2:t:Custom language for messages (optional)
 cell:H2:t:Contact info
 col:A:w:133
 col:B:w:102

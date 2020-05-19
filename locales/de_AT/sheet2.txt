@@ -19,7 +19,7 @@ cell:C2:t:aktiv?:comment:TRUE / FALSE
 cell:D2:t:Anzahl Dienste bisher:comment:wird bei Ausführung des Skriptes automatisch aktualisiert
 cell:E2:t:Eintrittsdatum
 cell:F2:t:Aktiv bis (optional)
-cell:G2:t:Sprache für Nachrichten (optional en, de_AT)
+cell:G2:t:Spezifische Sprache für Nachrichten (optional)
 cell:H2:t:Kontaktinfo
 col:A:w:133
 col:B:w:102

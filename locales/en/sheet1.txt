@@ -20,7 +20,7 @@ cell:C2:t:Event no. (hide)
 cell:D2:t:Regular date (hide optionally)
 cell:E2:t:Weekday:ntvf:1
 cell:F2:t:Calendar week
-cell:G2:t:Task name
+cell:G2:t:Task
 cell:H2:t:Number of persons needed (total)
 cell:I2:t:Number of experienced persons needed
 cell:J2:t:Person 1
