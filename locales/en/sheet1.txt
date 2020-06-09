@@ -14,39 +14,48 @@ Content-type: text/plain; charset=UTF-8
 
 version:1.5
 cell:E1:ntvf:1
-cell:A2:t:Date
-cell:B2:t:Task ID (hide)
-cell:C2:t:Event no. (hide)
-cell:D2:t:Regular date (hide optionally)
-cell:E2:t:Weekday:ntvf:1
-cell:F2:t:Calendar week
-cell:G2:t:Task
-cell:H2:t:Number of persons needed (total)
-cell:I2:t:Number of experienced persons needed
-cell:J2:t:Person 1
-cell:K2:t:Person 2
-cell:L2:t:Person 3
-cell:M2:t:Person 4
-cell:N2:t:Person 5
-cell:O2:t:Please note
-cell:P2:t:Reminders sent? (hide)
-cell:Q2:t:Check ups sent? (hide)
-cell:R2:t:Event no. in time period (hide)
-cell:S2:t:Task time period start date (hide)
-cell:T2:t:Note IDs (hide)
-cell:U2:t:Note nos. in time period (hide)
-cell:V2:t:Note time period start dates (hide)
-cell:W2:t:Hide row? (optionally TRUE)
-cell:E3:vtf:t::IF(A3<>"",A3,""):ntvf:1
-cell:F3:vtf:t::IF(A3<>"",CEILING((A3-(DATE(YEAR(A3),1,1)-WEEKDAY(DATE(YEAR(A3),1,1),2))-IF(WEEKDAY(DATE(YEAR(A3),1,1),2)>4,7,0))/7),"")
+cell:A2:t:Date:ro:yes:comment:YYYY-MM-DD
+cell:B2:t:Task ID (hide):ro:yes
+cell:C2:t:Event no. (hide):ro:yes
+cell:D2:t:Regular date (hide optionally):ro:yes
+cell:E2:t:Weekday:ro:yes:ntvf:1
+cell:F2:t:Calendar week:ro:yes
+cell:G2:t:Task:ro:yes
+cell:H2:t:Number of persons needed (total):ro:yes
+cell:I2:t:Number of experienced persons needed:ro:yes
+cell:J2:t:Person 1:ro:yes
+cell:K2:t:Person 2:ro:yes
+cell:L2:t:Person 3:ro:yes
+cell:M2:t:Person 4:ro:yes
+cell:N2:t:Person 5:ro:yes
+cell:O2:t:Please note:ro:yes
+cell:P2:t:Reminders sent? (hide):ro:yes
+cell:Q2:t:Check ups sent? (hide):ro:yes
+cell:R2:t:Event no. in time period (hide):ro:yes
+cell:S2:t:Task time period start date (hide):ro:yes
+cell:T2:t:Note IDs (hide):ro:yes
+cell:U2:t:Note nos. in time period (hide):ro:yes
+cell:V2:t:Note time period start dates (hide):ro:yes
+cell:W2:t:Hide row? (optionally TRUE):ro:yes
+cell:B3:ro:yes
+cell:C3:ro:yes
+cell:D3:ro:yes
+cell:E3:vtf:t::IF(A3<>"",A3,""):ro:yes:ntvf:1
+cell:F3:vtf:t::IF(A3<>"",CEILING((A3-(DATE(YEAR(A3),1,1)-WEEKDAY(DATE(YEAR(A3),1,1),2))-IF(WEEKDAY(DATE(YEAR(A3),1,1),2)>4,7,0))/7),""):ro:yes
+cell:P3:ro:yes
+cell:Q3:ro:yes
+cell:R3:ro:yes
+cell:S3:ro:yes
+cell:T3:ro:yes
+cell:U3:ro:yes
+cell:V3:ro:yes
 col:A:w:101
 col:B:hide:yes
 col:C:hide:yes
 col:D:w:92
-col:D:hide:yes
 col:E:w:101
 col:F:w:65
-col:G:w:93
+col:G:w:125
 col:I:w:86
 col:O:w:300
 col:P:w:81

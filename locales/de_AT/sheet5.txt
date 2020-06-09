@@ -20,58 +20,58 @@ cell:D1:vtc:::
 cell:E1:vtc::::cf:1
 cell:F1:vtc:::
 cell:A2:t:Codename (ausblenden):cf:1
-cell:B2:vtc:::
-cell:C2:t:Aktuelle Einstellung:cf:1
-cell:D2:t:Mögliche Einstellungen
-cell:E2:t:Empfohlene Einstellung:cf:1
-cell:F2:t:Erläuterung
+cell:B2:vtc::::ro:yes
+cell:C2:t:Aktuelle Einstellung:ro:yes:cf:1
+cell:D2:t:Mögliche Einstellungen:ro:yes
+cell:E2:t:Empfohlene Einstellung:ro:yes:cf:1
+cell:F2:t:Erläuterung:ro:yes
 cell:A3:vtc::::cf:1
-cell:B3:t:Version
+cell:B3:t:Version:ro:yes
 cell:C3:t:0.1:cf:1
-cell:D3:vtc:::
-cell:E3:vtc::::cf:1
-cell:F3:t:Versionsnummer der verwendeten Tabelle/Skript
+cell:D3:vtc::::ro:yes
+cell:E3:vtc::::ro:yes:cf:1
+cell:F3:t:Versionsnummer der verwendeten Tabelle/Skript:ro:yes
 cell:A4:t:header_lines:cf:1
-cell:B4:t:Anzahl Kopfzeilen
+cell:B4:t:Anzahl Kopfzeilen:ro:yes
 cell:C4:v:2:cf:1
-cell:D4:t:x >= 0
-cell:E4:v:2:cf:1
-cell:F4:t:Anzahl Zeilen vor dem ersten regulären Eintrag jeder Tabelle (muss für alle Untertabellen gleich sein). Wenn Kopfzeilen eingefügt oder entfernt werden, muss diese Einstellung angepasst werden.
+cell:D4:t:x >= 0:ro:yes
+cell:E4:v:2:ro:yes:cf:1
+cell:F4:t:Anzahl Zeilen vor dem ersten regulären Eintrag jeder Tabelle (muss für alle Untertabellen gleich sein). Wenn Kopfzeilen eingefügt oder entfernt werden, muss diese Einstellung angepasst werden.:ro:yes
 cell:G4:cf:1
 cell:A5:vtc:::
-cell:B5:t:Standardsprache
+cell:B5:t:Standardsprache:ro:yes
 cell:C5:t:de_AT:cf:1
-cell:D5:t:de_AT;en
-cell:E5:vtc::::cf:1
-cell:F5:t:Sprache, in der Benachrichtigungs-Mails versandt werden, wenn von adressierter Teilnehmer*in nicht selbst festgelegt
+cell:D5:t:de_AT;en:ro:yes
+cell:E5:vtc::::ro:yes:cf:1
+cell:F5:t:Sprache, in der Benachrichtigungs-Mails versandt werden, wenn von adressierter Teilnehmer*in nicht selbst festgelegt:ro:yes
 cell:A6:vtc:::
-cell:B6:t:Name der Aufgabengruppe
+cell:B6:t:Name der Aufgabengruppe:ro:yes
 cell:C6:t:Unbenannte Aufgabengruppe:cf:1
-cell:D6:vtc:::
-cell:E6:vtc::::cf:1
-cell:F6:t:Erscheint in den Benachrichtigungs-Emails
+cell:D6:vtc::::ro:yes
+cell:E6:vtc::::ro:yes:cf:1
+cell:F6:t:Erscheint in den Benachrichtigungs-Emails:ro:yes
 cell:A7:vtc:::
-cell:B7:t:Zuweisungs-Abstandsfaktor
+cell:B7:t:Zuweisungs-Abstandsfaktor:ro:yes
 cell:C7:v:0.8:cf:1
-cell:D7:t:0 < x < 1
-cell:E7:v:0.8:cf:1
-cell:F7:t:Damit Personen nicht unverhältnismäßig (zur Anzahl der aktiven Teilnehmer*innen) bald erneut zugewiesen werden. Je niedriger dieser Wert, desto balder werden Personen bevorzugt erneut zugewiesen, wenn ihr Verhältnis an erledigten Diensten zu ihrer Mitgliedschaftsdauer geringer ist als das von anderen in der gleichen Auswahl.
+cell:D7:t:0 < x < 1:ro:yes
+cell:E7:v:0.8:ro:yes:cf:1
+cell:F7:t:Damit Personen nicht unverhältnismäßig (zur Anzahl der aktiven Teilnehmer*innen) bald erneut zugewiesen werden. Je niedriger dieser Wert, desto balder werden Personen bevorzugt erneut zugewiesen, wenn ihr Verhältnis an erledigten Diensten zu ihrer Mitgliedschaftsdauer geringer ist als das von anderen in der gleichen Auswahl.:ro:yes
 cell:A8:vtc:::
-cell:B8:t:Anzahl erledigter Termine, ab der sich Teilnehmer*innen "auskennen"
+cell:B8:t:Anzahl erledigter Termine, ab der sich Teilnehmer*innen "auskennen":ro:yes
 cell:C8:v:1:cf:1
-cell:D8:t:x >= 0
-cell:E8:v:1:cf:1
-cell:F8:t:Anzahl an erledigten (vergangenen) Terminen, ab denen jeweilige Teilnehmer*in automatisch als "kennt sich aus" klassifiziert wird. 0 bedeutet\c "kennt sich aus" wird nicht automatisch geändert
-cell:B9:t:Sicherungskopie vor Ausführung des Skriptes für Untertabellen ... anlegen
+cell:D8:t:x >= 0:ro:yes
+cell:E8:v:1:ro:yes:cf:1
+cell:F8:t:Anzahl an erledigten (vergangenen) Terminen, ab denen jeweilige Teilnehmer*in automatisch als "kennt sich aus" klassifiziert wird. 0 bedeutet\c "kennt sich aus" wird nicht automatisch geändert:ro:yes
+cell:B9:t:Sicherungskopie vor Ausführung des Skriptes für Untertabellen ... anlegen:ro:yes
 cell:C9:t:1;2
-cell:D9:t:durch Strichpunkte getrennte Liste an Tabellennummern (None, 1-5) oder leer
-cell:E9:t:1;2
-cell:F9:t:Legt einen Ordner unter exported_sheets/ mit den gewählten Untertabellen im socialcalc Format an. Tabelle "None" ist die zugrundeliegende Tabelle, aufrufbar wenn das "=" aus der URL entfernt wird.
-cell:B10:t:Sicherungskopie nach Ausführung des Skriptes für Untertabellen ... anlegen
+cell:D9:t:durch Strichpunkte getrennte Liste an Tabellennummern (None, 1-5) oder leer:ro:yes
+cell:E9:t:1;2:ro:yes
+cell:F9:t:Legt einen Ordner unter exported_sheets/ mit den gewählten Untertabellen im socialcalc Format an. Tabelle "None" ist die zugrundeliegende Tabelle, aufrufbar wenn das "=" aus der URL entfernt wird.:ro:yes
+cell:B10:t:Sicherungskopie nach Ausführung des Skriptes für Untertabellen ... anlegen:ro:yes
 cell:C10:t:None;1;2;3;4;5
-cell:D10:t:durch Strichpunkte getrennte Liste an Tabellennummern (None, 1-5) oder leer
-cell:E10:t:None;1;2;3;4;5
-cell:F10:t:Legt einen Ordner unter exported_sheets/ mit den gewählten Untertabellen im socialcalc Format an. Tabelle "None" ist die zugrundeliegende Tabelle, aufrufbar wenn das "=" aus der URL entfernt wird.
+cell:D10:t:durch Strichpunkte getrennte Liste an Tabellennummern (None, 1-5) oder leer:ro:yes
+cell:E10:t:None;1;2;3;4;5:ro:yes
+cell:F10:t:Legt einen Ordner unter exported_sheets/ mit den gewählten Untertabellen im socialcalc Format an. Tabelle "None" ist die zugrundeliegende Tabelle, aufrufbar wenn das "=" aus der URL entfernt wird.:ro:yes
 col:A:w:115
 col:A:hide:yes
 col:B:w:145

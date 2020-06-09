@@ -13,21 +13,21 @@ part:audit
 Content-type: text/plain; charset=UTF-8
 
 version:1.5
-cell:A2:t:ID
-cell:B2:t:Name
-cell:C2:t:Beginn
-cell:D2:t:Ende
-cell:E2:t:Faktor für Zeitperiode (alle ... Tage/ Monate/ Jahre)
-cell:F2:t:Zeitperiode (day, month, year)
-cell:G2:t:x-te (Wochen-)Tag(e) in Zeitperiode (2 = zweiter, -1 = letzter, 1;3;5 etc)
-cell:H2:t:Wochentag-Filter (nur bei month/year; monday, friday;saturday etc)
-cell:I2:t:Anzahl benötigte Personen (insg.)
-cell:J2:t:Anzahl benötigte Personen, die sich auskennen
-cell:K2:t:Für ... Tage im Voraus zuweisen
-cell:L2:t:Für ... Tage im Voraus auflisten
-cell:M2:t:Ab ... vergangenen Tagen ausblenden
-cell:N2:t:Erinnerung ... Tage vor Termin ausschicken
-cell:O2:t:Bitte beachten (Hinweise)
+cell:A2:t:ID:ro:yes
+cell:B2:t:Name:ro:yes
+cell:C2:t:Beginn:ro:yes:comment:JJJJ-MM-TT
+cell:D2:t:Ende (optional):ro:yes:comment:JJJJ-MM-TT
+cell:E2:t:Faktor für Zeitperiode (jeden ... Tag/ Monat/ Jahr):ro:yes
+cell:F2:t:Zeitperiode (day, month, year):ro:yes
+cell:G2:t:x-te (Wochen-)Tag(e) in Zeitperiode (2 = zweiter, -1 = letzter, 1;3;5 etc):ro:yes
+cell:H2:t:Wochentag-Filter (nur bei month/year):ro:yes:comment:monday, tuesday, wednesday, thursday, friday, saturday, sunday\nmehrere Werte mit ; trennen (z.B. friday;saturday = jeden x-ten Termin in der Zeitperiode, der entweder an einem Freitag oder Samstag ist)
+cell:I2:t:Anzahl benötigte Personen (insg.):ro:yes
+cell:J2:t:Anzahl benötigte Personen, die sich auskennen:ro:yes
+cell:K2:t:Für ... Tage im Voraus zuweisen:ro:yes
+cell:L2:t:Für ... Tage im Voraus auflisten:ro:yes
+cell:M2:t:Ab ... vergangenen Tagen ausblenden:ro:yes
+cell:N2:t:Erinnerung ... Tage vor Termin ausschicken:ro:yes
+cell:O2:t:Bitte beachten (Hinweise):ro:yes
 col:B:w:89
 col:C:w:97
 col:H:w:94

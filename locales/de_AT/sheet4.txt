@@ -22,19 +22,19 @@ cell:F1:vtc:::
 cell:G1:vtc::::cf:1
 cell:H1:vtc:::
 cell:I1:vtc:::
-cell:A2:t:ID
-cell:B2:t:Aufgabentypen IDs (optional, wenn nicht alle; z.B. 1;3;4)
-cell:C2:t:Beginn:cf:1
-cell:D2:t:Ende
-cell:E2:t:Faktor für Zeitperiode (alle ... Tage/ Monate/ Jahre)
-cell:F2:t:Zeitperiode (day, month, year)
-cell:G2:t:x-te Termin(e) in Zeitperiode (2 = zweiter, -1 = letzter, 1;3;5 etc.):cf:1
-cell:H2:t:Wochentag-Filter (optional, nur bei month/year; z.B. monday, friday;saturday etc.)
-cell:I2:t:Text, der zu den Hinweisen des Termins hinzugefügt werden soll
+cell:A2:t:ID:ro:yes
+cell:B2:t:Aufgabentypen IDs (optional, wenn nicht alle; z.B. 1;3;4):ro:yes
+cell:C2:t:Beginn:ro:yes:cf:1:comment:JJJJ-MM-TT
+cell:D2:t:Ende (optional):ro:yes:comment:JJJJ-MM-TT
+cell:E2:t:Faktor für Zeitperiode (alle ... Tage/ Monate/ Jahre):ro:yes
+cell:F2:t:Zeitperiode (day, month, year):ro:yes
+cell:G2:t:x-te Termin(e) in Zeitperiode (2 = zweiter, -1 = letzter, 1;3;5 etc.):ro:yes:cf:1
+cell:H2:t:Wochentag-Filter (optional, nur bei month/year):ro:yes:comment:monday, tuesday, wednesday, thursday, friday, saturday, sunday\nmehrere Werte mit ; trennen (z.B. friday;saturday = jeden x-ten Termin in der Zeitperiode, der entweder an einem Freitag oder Samstag ist)
+cell:I2:t:Text, der zu den Hinweisen des Termins hinzugefügt werden soll:ro:yes
 col:A:w:72
 col:B:w:125
-col:C:w:157
-col:D:w:86
+col:C:w:122
+col:D:w:119
 col:E:w:107
 col:F:w:115
 col:H:w:105

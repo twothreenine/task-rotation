@@ -22,15 +22,15 @@ cell:F1:vtc:::
 cell:G1:vtc::::cf:1
 cell:H1:vtc:::
 cell:I1:vtc:::
-cell:A2:t:ID
-cell:B2:t:Task type IDs (optional, if not all; example\c 1;3;4)
-cell:C2:t:Start:cf:1
-cell:D2:t:End
-cell:E2:t:Time period factor (each ... days/ months / years)
-cell:F2:t:Time period mode (day, month, year)
-cell:G2:t:nth event(s) in time period (2 = second, -1 = last, 1;3;5 etc.):cf:1
-cell:H2:t:Weekday filter (optional, only for month/year; monday, friday;saturday etc.)
-cell:I2:t:Message to add to event's note
+cell:A2:t:ID:ro:yes
+cell:B2:t:Task type IDs (optional, if not all; example\c 1;3;4):ro:yes
+cell:C2:t:Start:ro:yes:cf:1:comment:YYYY-MM-DD
+cell:D2:t:End (optional):ro:yes:comment:YYYY-MM-DD
+cell:E2:t:Time period factor (each ... days/ months / years):ro:yes
+cell:F2:t:Time period mode (day, month, year):ro:yes
+cell:G2:t:nth event(s) in time period (2 = second, -1 = last, 1;3;5 etc.):ro:yes:cf:1
+cell:H2:t:Weekday filter (optional, only for month/year):ro:yes:comment:monday, tuesday, wednesday, thursday, friday, saturday, sunday\nseparate multiple values with ; (e.g. friday;saturday = each nth event in a time period that is either on a friday or saturday)
+cell:I2:t:Message to add to event's note:ro:yes
 col:A:w:72
 col:B:w:125
 col:C:w:157

@@ -224,9 +224,7 @@ def load_ethercalc(host=None, page=None, sheet=None, export_format="python"): # 
     logging.debug("remote host: " + host + " remote page: " + page + sheet_str)
     return ethercalc.EtherCalc(host).export(page + sheet_str, format=export_format)
 
-def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, notes_sheet_no=4, settings_sheet_no=5): # converts rows of the sheets events, participants and tasks into python objects; usually the header consists of 2 rows which have to be ignored (pop)
-    settings_list = load_ethercalc(sheet=settings_sheet_no)
-
+def find_header_lines(settings_list):
     header_lines_row = 0
     for row in settings_list:
         try:
@@ -236,8 +234,11 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
             header_lines_row += 1
         except:
             raise
-    global header_lines
-    header_lines = int(settings_list[header_lines_row][2])
+    return int(settings_list[header_lines_row][2])
+
+def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, notes_sheet_no=4, settings_sheet_no=5): # converts rows of the sheets events, participants and tasks into python objects; usually the header consists of 2 rows which have to be ignored (pop)
+    settings_list = load_ethercalc(sheet=settings_sheet_no)
+    header_lines = find_header_lines(settings_list=settings_list)
     print("header lines = "+str(header_lines))
     for i in range(header_lines):
         settings_list.pop(0)
@@ -284,8 +285,9 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
     note_list = load_ethercalc(sheet=notes_sheet_no)
     for i in range(header_lines):
         note_list.pop(0)
-    while note_list[-1][1] == None:
-        note_list.pop(-1)
+    if note_list:
+        while note_list[-1][0] == None:
+            note_list.pop(-1)
 
     for row in participant_list:
         try:
@@ -312,6 +314,8 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         task_type_ids = python_list_from_semicolon_separated_list(any_list=row[1], data_type="int")
         for tt in task_type_ids:
             task_types.append(next((task for task in tasks if task.type_id == tt), None))
+        if not task_type_ids:
+            task_types = tasks.copy()
         event_numbers = python_list_from_semicolon_separated_list(any_list=row[6], data_type="int")
         n = Note(type_id=int(row[0]), task_types=task_types, start=read_date(row[2]), end=read_date(row[3]), time_period_factor=row[4], time_period_mode=row[5], event_numbers_in_time_period=event_numbers, weekday_filter=read_weekdays(row[7]), message=row[8])
         notes.append(n)
@@ -426,6 +430,8 @@ def update_ethercalc():
     e_page = calc["page"]+".1"
     p_page = calc["page"]+".2"
 
+    e.command(e_page, ["set B"+str(1+header_lines)+":W"+str(1+header_lines+len(events))+" readonly no"]) # unlocking cells in the events sheet
+
     # updating participants' task counts and capability
     for p in participants:
         if not p.task_count == p.old_task_count:
@@ -508,6 +514,9 @@ def update_ethercalc():
     for event in events_to_mark:
         row = str(header_lines+events.index(event)+1)
         e.command(e_page, ["set A"+row+":W"+row+" bgcolor rgb(255, 255, 0)"])
+
+    e.command(e_page, ["set B"+str(1+header_lines)+":F"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet
+    e.command(e_page, ["set P"+str(1+header_lines)+":V"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet
 
     if save_backup_after_for_sheet_nos:
         save_backup(sheet_nos=save_backup_after_for_sheet_nos, note="after")

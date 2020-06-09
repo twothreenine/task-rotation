@@ -20,8 +20,7 @@ def initialize(host, page, language, name, overwrite=False):
         new_calc_host.command(page, ["set B"+str(no+1)+" text t "+locales["sheet"+str(no)]])
         # sheet = script.load_ethercalc(host=host, page="w2jjmp1soy3s", sheet=no, export_format="socialcalc")
         with open('locales/'+language+"/sheet"+str(no)+".txt", "r", encoding='utf-8') as text_file:
-            sheet = text_file.read()
-        print(sheet)
+            sheet = text_file.read().encode("utf-8")
         new_calc_host.update(sheet, format="socialcalc", id=page+"."+str(no))
     new_calc_host.command(page+".5", ["set C6 text t "+name])
 

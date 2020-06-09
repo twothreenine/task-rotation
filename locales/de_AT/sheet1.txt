@@ -14,40 +14,52 @@ Content-type: text/plain; charset=UTF-8
 
 version:1.5
 cell:E1:ntvf:1
-cell:A2:t:Datum
-cell:B2:t:Typ ID (ausblenden)
-cell:C2:t:Termin Nr. (ausblenden)
-cell:D2:t:Reguläres Datum (optional ausblenden)
-cell:E2:t:Wochentag:ntvf:1
-cell:F2:t:Kalenderwoche
-cell:G2:t:Aufgabe
-cell:H2:t:Anzahl benötigte Personen (insg.)
-cell:I2:t:Anzahl benötigte Personen, die sich auskennen
-cell:J2:t:Person 1
-cell:K2:t:Person 2
-cell:L2:t:Person 3
-cell:M2:t:Person 4
-cell:N2:t:Person 5
-cell:O2:t:Bitte beachten (Hinweise):comment:Trennen mit ;
-cell:P2:t:Erinnerungen versandt? (ausblenden)
-cell:Q2:t:Nachkontrolle versandt? (ausblenden)
-cell:R2:t:Termin Nr. in Aufgaben-Zeitperiode (ausblenden)
-cell:S2:t:Startdatum des Aufgaben-Zeitperiode (ausblenden)
-cell:T2:t:Hinweis IDs (ausblenden)
-cell:U2:t:Hinweis Nrn. in Zeitperiode (ausblenden)
-cell:V2:t:Startdaten der Hinweis-Zeitperiode (ausblenden)
-cell:W2:t:Zeile ausblenden? (optional TRUE)
-cell:E3:vtf:t::IF(A3<>"",A3,""):ntvf:1
-cell:F3:vtf:t::IF(A3<>"",CEILING((A3-(DATE(YEAR(A3),1,1)-WEEKDAY(DATE(YEAR(A3),1,1),2))-IF(WEEKDAY(DATE(YEAR(A3),1,1),2)>4,7,0))/7),"")
-col:A:w:101
+cell:A2:t:Datum:ro:yes:comment:JJJJ-MM-TT
+cell:B2:t:Typ ID (ausblenden):ro:yes
+cell:C2:t:Termin Nr. (ausblenden):ro:yes
+cell:D2:t:Reguläres Datum (optional ausblenden):ro:yes
+cell:E2:t:Wochentag:ro:yes:ntvf:1
+cell:F2:t:Kalenderwoche:ro:yes
+cell:G2:t:Aufgabe:ro:yes
+cell:H2:t:Anzahl benötigte Personen (insg.):ro:yes
+cell:I2:t:Anzahl benötigte Personen, die sich auskennen:ro:yes
+cell:J2:t:Person 1:ro:yes
+cell:K2:t:Person 2:ro:yes
+cell:L2:t:Person 3:ro:yes
+cell:M2:t:Person 4:ro:yes
+cell:N2:t:Person 5:ro:yes
+cell:O2:t:Bitte beachten (Hinweise):ro:yes:comment:Trennen mit ;
+cell:P2:t:Erinnerungen versandt? (ausblenden):ro:yes
+cell:Q2:t:Nachkontrolle versandt? (ausblenden):ro:yes
+cell:R2:t:Termin Nr. in Aufgaben-Zeitperiode (ausblenden):ro:yes
+cell:S2:t:Startdatum des Aufgaben-Zeitperiode (ausblenden):ro:yes
+cell:T2:t:Hinweis IDs (ausblenden):ro:yes
+cell:U2:t:Hinweis Nrn. in Zeitperiode (ausblenden):ro:yes
+cell:V2:t:Startdaten der Hinweis-Zeitperiode (ausblenden):ro:yes
+cell:W2:t:Zeile ausblenden? (optional TRUE):ro:yes
+cell:B3:ro:yes
+cell:C3:ro:yes
+cell:D3:ro:yes
+cell:E3:vtf:t::IF(A3<>"",A3,""):ro:yes:ntvf:1
+cell:F3:vtf:t::IF(A3<>"",CEILING((A3-(DATE(YEAR(A3),1,1)-WEEKDAY(DATE(YEAR(A3),1,1),2))-IF(WEEKDAY(DATE(YEAR(A3),1,1),2)>4,7,0))/7),""):ro:yes
+cell:P3:ro:yes
+cell:Q3:ro:yes
+cell:R3:ro:yes
+cell:S3:ro:yes
+cell:T3:t::ro:yes
+cell:U3:t::ro:yes
+cell:V3:ro:yes
+cell:W3:ro:yes
+col:A:w:100
 col:B:hide:yes
 col:C:hide:yes
-col:D:w:92
-col:D:hide:yes
-col:E:w:101
+col:D:w:100
+col:E:w:100
 col:F:w:65
-col:G:w:93
+col:G:w:125
 col:I:w:86
+col:J:w:80
+col:K:w:80
 col:O:w:299
 col:P:w:81
 col:P:hide:yes
@@ -62,6 +74,7 @@ col:V:w:107
 col:V:hide:yes
 col:W:w:103
 row:2:h:15
+row:3:h:15
 sheet:c:23:r:3:tvf:2
 valueformat:1:dddd
 valueformat:2:text-wiki
