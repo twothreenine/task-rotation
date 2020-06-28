@@ -1,6 +1,7 @@
 # task-rotation
 
 Python script for automatic assignment of recurring tasks within a group
+
 [Details (German)](https://github.com/twothreenine/task-rotation/blob/master/manuals/manual_de.md)
 
 ## Requirements:
