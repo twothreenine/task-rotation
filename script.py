@@ -375,9 +375,6 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         e = Event(date=read_date(row[0]), task_type=task_type, event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[7]), capable_persons_needed=int(row[8]), assigned_persons=assigned_persons, event_number_in_time_period=int(row[17]), time_period_start_date=read_date(row[18]), note_types=note_types, note_numbers_in_time_period=note_numbers_in_time_period, note_time_period_start_dates=note_time_period_start_dates, hidden=hidden, note=row[14], assignment_errors=assignment_errors, reminders_sent=reminders_sent, check_ups_sent=check_ups_sent)
         events.append(e)
 
-    if save_backup_before_for_sheet_nos:
-        save_backup(sheet_nos=save_backup_before_for_sheet_nos, note="before")
-
 def assigned_persons_column_letter(person_count):
     if person_count == 0:
         column_letter="J"
@@ -515,12 +512,6 @@ def update_ethercalc():
         row = str(header_lines+events.index(event)+1)
         e.command(e_page, ["set A"+row+":W"+row+" bgcolor rgb(255, 255, 0)"])
 
-    e.command(e_page, ["set B"+str(1+header_lines)+":F"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet
-    e.command(e_page, ["set P"+str(1+header_lines)+":V"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet
-
-    if save_backup_after_for_sheet_nos:
-        save_backup(sheet_nos=save_backup_after_for_sheet_nos, note="after")
-
 def update_ethercalc_messages_sent():
     e = ethercalc.EtherCalc(calc["host"])
     e_page = calc["page"]+".1"
@@ -529,6 +520,12 @@ def update_ethercalc_messages_sent():
         e.command(e_page, ["set P"+str(events.index(e_r)+1+header_lines)+" constant nl 1 TRUE"])
     for e_c in [event for event in events if event.check_ups_sent == True and event.check_ups_sent_before == False]:
         e.command(e_page, ["set Q"+str(events.index(e_c)+1+header_lines)+" constant nl 1 TRUE"])
+
+def relock_cells():
+    e = ethercalc.EtherCalc(calc["host"])
+    e_page = calc["page"]+".1"
+    e.command(e_page, ["set B"+str(1+header_lines)+":F"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet
+    e.command(e_page, ["set P"+str(1+header_lines)+":V"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet    if save_backup_after_for_sheet_nos:
 
 def count_tasks(): # calculating how many tasks each participant has done
     global events
@@ -1104,6 +1101,8 @@ def reset_global_values():
 def run_script_for_calc(file_name):
     load_calc_data(file_name=file_name)
     load_objects()
+    if save_backup_before_for_sheet_nos:
+        save_backup(sheet_nos=save_backup_before_for_sheet_nos, note="before")
     count_tasks()
     list_and_assign_events()
     update_ethercalc()
@@ -1111,6 +1110,9 @@ def run_script_for_calc(file_name):
     send_reminders()
     send_check_ups()
     update_ethercalc_messages_sent()
+    relock_cells()
+    if save_backup_after_for_sheet_nos:
+        save_backup(sheet_nos=save_backup_after_for_sheet_nos, note="after")
     reset_global_values()
 
 def list_calc_url_files():
