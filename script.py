@@ -534,7 +534,7 @@ def count_tasks(): # calculating how many tasks each participant has done
     for e in past_events:
         for a_p in e.assigned_persons:
             a_p.task_count += 1
-            if not a_p.capable and capable_after_task_count > 0 and a_p.task_count > capable_after_task_count:
+            if not a_p.capable and capable_after_task_count > 0 and a_p.task_count >= capable_after_task_count:
                 a_p.capable = True
     for p in participants:
         delta = datetime.date.today() - p.entry_date

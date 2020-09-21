@@ -18,4 +18,4 @@ Python script for automatic assignment of recurring tasks within a group
 
 ## example sheet
 
-https://ethercalc.org/=taskrotation0-1
+https://ethercalc.net/=taskrotation0-1
