@@ -270,7 +270,7 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
     participant_list = load_ethercalc(sheet=participant_sheet_no)
     for i in range(header_lines):
         participant_list.pop(0)
-    while participant_list[-1][0] == "":
+    while participant_list[-1][0] == "" or participant_list[-1][0] == None:
         participant_list.pop(-1)
     event_list = load_ethercalc(sheet=event_sheet_no)
     for i in range(header_lines):
