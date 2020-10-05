@@ -1,6 +1,7 @@
 FROM continuumio/miniconda3:latest
 ADD *.py /
-ADD locals/ /
-RUN pip install ethercalc-python
-RUN pip install Babel
+ADD locales/ /locales/
+ADD _credentials/ /_credentials/
+ADD requirements.txt /
+RUN pip install -r requirements.txt
 CMD ["python", "./script.py"]
