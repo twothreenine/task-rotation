@@ -29,12 +29,14 @@ save_backup_before_for_sheet_nos = []
 save_backup_after_for_sheet_nos = []
 
 def read_config():
-    with open('_credentials/config.json') as json_file:
-        return json.load(json_file)
+    config['foodsoft_url'] = os.environ['TR_FOODSOFT_URL']
+    config['foodsoft_user'] = os.environ['TR_FOODSOFT_USER']
+    config['foodsoft_passwort'] = os.environ['TR_FOODSOFT_PASS']
+    return config
 
 config = read_config()
 
-fsc = FSConnector(config['foodsoft']['url'], config['foodsoft']['user'], config['foodsoft']['password'])
+fsc = FSConnector(config['foodsoft_url'], config['foodsoft_user'], config['foodsoft_password'])
 
 
 def semicolon_separated_list_from_python_list(any_list, attribute=None):
@@ -209,8 +211,10 @@ class Note:
 
 def load_calc_data(file_name):
     global calc
-    with open('_credentials/calc_urls/'+file_name+".json") as json_file:
-        calc = json.load(json_file)
+    calc['host'] = os.environ['TR_CALC_HOST']
+    calc['page'] = os.environ['TR_CALC_PAGE']
+    calc['name'] = os.environ['TR_CALC_NAME']
+    return calc
 
 def load_ethercalc(host=None, page=None, sheet=None, export_format="python"): # returns one of multiple sheets as a nested python list; for the first sheet: sheet=1
     if not host:
