@@ -418,7 +418,7 @@ def update_ethercalc():
     global events
     global participants
 
-    loggin.debug("update_ethercalc: " + calc["host"])
+    logging.debug("update_ethercalc: " + calc["host"])
     e = ethercalc.EtherCalc(calc["host"])
     e_page = calc["page"]+".1"
     p_page = calc["page"]+".2"
