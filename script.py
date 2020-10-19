@@ -29,9 +29,7 @@ save_backup_before_for_sheet_nos = []
 save_backup_after_for_sheet_nos = []
 
 def read_config():
-    config['foodsoft_url'] = os.environ['TR_FOODSOFT_URL']
-    config['foodsoft_user'] = os.environ['TR_FOODSOFT_USER']
-    config['foodsoft_passwort'] = os.environ['TR_FOODSOFT_PASS']
+    config = {'foodsoft_url': os.environ['TR_FOODSOFT_URL'],'foodsoft_user': os.environ['TR_FOODSOFT_USER'],'foodsoft_password': os.environ['TR_FOODSOFT_PASS']}
     return config
 
 config = read_config()
@@ -208,13 +206,6 @@ class Note:
         self.time_period_mode = time_period_mode
         self.message = message
         self.weekday_filter = weekday_filter
-
-def load_calc_data(file_name):
-    global calc
-    calc['host'] = os.environ['TR_CALC_HOST']
-    calc['page'] = os.environ['TR_CALC_PAGE']
-    calc['name'] = os.environ['TR_CALC_NAME']
-    return calc
 
 def load_ethercalc(host=None, page=None, sheet=None, export_format="python"): # returns one of multiple sheets as a nested python list; for the first sheet: sheet=1
     if not host:
@@ -427,6 +418,7 @@ def update_ethercalc():
     global events
     global participants
 
+    loggin.debug("update_ethercalc: " + calc["host"])
     e = ethercalc.EtherCalc(calc["host"])
     e_page = calc["page"]+".1"
     p_page = calc["page"]+".2"
@@ -1102,8 +1094,8 @@ def reset_global_values():
     global save_backup_after_for_sheet_nos
     save_backup_after_for_sheet_nos = []
 
-def run_script_for_calc(file_name):
-    load_calc_data(file_name=file_name)
+def run_script_for_calc(calc_config):
+    set_calc_data(calc_config)
     load_objects()
     if save_backup_before_for_sheet_nos:
         save_backup(sheet_nos=save_backup_before_for_sheet_nos, note="before")
@@ -1119,20 +1111,29 @@ def run_script_for_calc(file_name):
         save_backup(sheet_nos=save_backup_after_for_sheet_nos, note="after")
     reset_global_values()
 
-def list_calc_url_files():
-    calc_url_files = os.listdir('_credentials/calc_urls/')
-    file_names = []
-    for file in calc_url_files:
-        file_names.append(file[:-5])
-    return file_names
+def set_calc_data(config):
+    global calc
+    calc['host'] = config['host']
+    calc['page'] = config['page']
+    calc['name'] = config['name']
+    return calc
+
+def get_calc_configs():
+    hosts = os.environ['TR_CALC_HOST'].split(';')
+    pages = os.environ['TR_CALC_PAGE'].split(';')
+    names = os.environ['TR_CALC_NAME'].split(';')
+    if (len(hosts) == len(pages) == len(names)):
+        return [dict(zip(('host','page','name'),(item,pages[i],names[i]))) for i,item in enumerate(hosts)]
+    
+    raise ValueError('Hosts, pages and names have to be the same sice')
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("Enter Main()")
 
-    calc_url_files = list_calc_url_files()
-    for file_name in calc_url_files:
-        run_script_for_calc(file_name=file_name)
+    calc_configs = get_calc_configs()
+    for config in calc_configs:
+        run_script_for_calc(config)
 
     fsc.logout()
 

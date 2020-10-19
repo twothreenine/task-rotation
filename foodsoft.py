@@ -35,7 +35,7 @@ class FSConnector:
     def _get(self, url, header, data=None):
         if data is None:
             response = self._session.get(url, headers=header)
-        if response.status_code is not 200:
+        if response.status_code != 200:
             self._session.close()
             logging.error('ERROR ' + str(response.status_code) + ' during GET ' + url)
             raise ConnectionError('Cannot get: ' +url)
@@ -54,7 +54,7 @@ class FSConnector:
     def _post(self, url, header, data, request):
         data['authenticity_token'] = self._get_auth_token(request.content)
         response = self._session.post(url, headers=header, data=data, cookies=request.cookies)
-        if response.status_code is not 200: #302
+        if response.status_code != 200: #302
             logging.error('Error ' + str(response.status_code) + ' during POST ' + url)
             raise ConnectionError('Error cannot post to ' + url)
 
