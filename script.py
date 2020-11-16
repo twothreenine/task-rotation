@@ -1127,15 +1127,29 @@ def get_calc_configs():
     
     raise ValueError('Hosts, pages and names have to be the same sice')
 
-def main():
-    logging.basicConfig(level=logging.DEBUG)
-    logging.debug("Enter Main()")
-
+def run_script():
     calc_configs = get_calc_configs()
     for config in calc_configs:
         run_script_for_calc(config)
 
     fsc.logout()
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug("Enter Main()")
+    try:
+        while True:
+            start_time = datetime.datetime.now()
+            logging.info("Script starts at: " + str(start_time))
+            run_script()
+            end_time = datetime.datetime.now()
+            logging.info("Script ends at: " + str(end_time))
+            renew_time = start_time + datetime.timedelta(weeks=1)
+            renew_time = renew_time.replace(hour=12, minute=0, second=0, microsecond=0)
+            time.sleep((renew_time - start_time).total_seconds())
+
+    except Exception as e:
+        logging.error(str(e))   
 
 if __name__== "__main__":
     main()
