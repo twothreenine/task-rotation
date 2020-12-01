@@ -4,11 +4,15 @@ import json
 import logging
 import pprint
 import datetime
+import time
 import random
 import os
 import babel.dates
 from foodsoft import FSConnector
 import export
+import sys
+
+from mail_logger import get_mail_logger
 
 pp = pprint.PrettyPrinter(indent=4)
 calc = {"host": "", "page": "", "name": ""}
@@ -1137,19 +1141,39 @@ def run_script():
 def main():
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("Enter Main()")
+    
+    service = False
+    logging.debug(",".join(sys.argv))
+    if len(sys.argv) > 1 and sys.argv[1] == '--service':
+        root_logger = logging.getLogger()
+        info_handler, error_handler = get_mail_logger(root_logger)
+        if info_handler is not None: root_logger.addHandler(info_handler)
+        if error_handler is not None: root_logger.addHandler(error_handler)
+        service = True
+
     try:
-        while True:
+        run = True
+        while run:
             start_time = datetime.datetime.now()
-            logging.info("Script starts at: " + str(start_time))
+            logging.debug("Script starts at: " + str(start_time))
             run_script()
             end_time = datetime.datetime.now()
-            logging.info("Script ends at: " + str(end_time))
+            logging.info("Script ends at: " + str(end_time) + ", with duration: " + str(end_time - start_time))
+            if not service:
+                run = False
+                continue
+
+            
             renew_time = start_time + datetime.timedelta(weeks=1)
             renew_time = renew_time.replace(hour=12, minute=0, second=0, microsecond=0)
             time.sleep((renew_time - start_time).total_seconds())
+            
+            
 
     except Exception as e:
-        logging.error(str(e))   
+        logging.error(str(e))
+    finally:
+        logging.info("Taskrotation servie was shutdown!")  
 
 if __name__== "__main__":
     main()

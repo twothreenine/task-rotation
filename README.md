@@ -14,7 +14,11 @@ Python script for automatic assignment of recurring tasks within a group
 
 ## execute
 
+for a single run: 
  python script.py
+
+as service:
+ python script.py --service
 
 ## example sheet
 
@@ -35,6 +39,14 @@ Note that all of theses variables needs to be set, otherwise the script will not
 * TR_CALC_HOST=<url to ethercalc instance>
 * TR_CALC_PAGE=<name of your sheet, without equals>
 * TR_CALC_NAME=<name for your sheet human readable>
+* TR_LOG_MAIL_SERVER=<server name of smtp server>
+* TR_LOG_MAIL_PORT=<smpt port, e.g.: for STARTTLS: 587>  
+* TR_LOG_MAIL_USER=<login user> 
+* TR_LOG_MAIL_PASS=<login password>
+* TR_LOG_MAIL_SENDER=<sender name/mail adress>
+* TR_LOG_MAIL_SUBJECT_PREFIX=<prefix of each log mail>
+* TR_LOG_MAIL_SUBSCRIBORS=<mail-adress:LOG-LEVEL;...>, where LEVEL = {INFO:ERROR}
+
 
 
 in Windows 10 PowerShell:
