@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from requests import exceptions
 import ethercalc
 import json
 import logging
@@ -1151,19 +1152,31 @@ def main():
         if error_handler is not None: root_logger.addHandler(error_handler)
         service = True
 
+    MAX_RETRY = 5
+    retry = 0
     try:
         run = True
         while run:
             start_time = datetime.datetime.now()
             logging.debug("Script starts at: " + str(start_time))
-            run_script()
+            try:
+                run_script()
+            except exceptions.HTTPError as e:
+                logging.debug("Error during taskrotaion, try again " + str(retry) + "/" + str(MAX_RETRY))
+                retry += 1
+                time.sleep(120) # wait for 2 minutes
+                if retry >= MAX_RETRY:
+                    logging.error("Etherpad not reachable after " + str(MAX_RETRY) + " retries!")
+                    break
+                continue
+            
+            retry = 0
             end_time = datetime.datetime.now()
             logging.info("Script ends at: " + str(end_time) + ", with duration: " + str(end_time - start_time))
             if not service:
                 run = False
                 continue
 
-            
             renew_time = start_time + datetime.timedelta(weeks=1)
             renew_time = renew_time.replace(hour=12, minute=0, second=0, microsecond=0)
             time.sleep((renew_time - start_time).total_seconds())
@@ -1173,7 +1186,7 @@ def main():
     except Exception as e:
         logging.error(str(e))
     finally:
-        logging.info("Taskrotation servie was shutdown!")  
+        logging.info("Taskrotation servie shutdown!")  
 
 if __name__== "__main__":
     main()
