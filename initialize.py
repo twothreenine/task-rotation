@@ -8,7 +8,10 @@ import script
 
 pp = pprint.PrettyPrinter(indent=4)
 
-calc_url_files = script.list_calc_url_files()
+calcs = script.get_calc_configs()
+calc_names = []
+for calc in calcs:
+    calc_names.append(calc["name"])
 
 def initialize(host, page, language, name, overwrite=False):
     with open('locales/'+language+'/locales.json', encoding='utf-8') as json_file:
@@ -36,9 +39,9 @@ def initialize(host, page, language, name, overwrite=False):
     data = {'host': host, 'page': page, 'name': name}
 
     name_no = ""
-    if name in calc_url_files and not overwrite:
+    if name in calc_names and not overwrite:
         name_no = 2
-        while name+"_"+str(name_no) in calc_url_files:
+        while name+"_"+str(name_no) in calc_names:
             name_no += 1
         name_no = "_" + str(name_no)
     file_name = name + name_no
@@ -61,8 +64,8 @@ def main():
         page = str(input("Please enter the page ID for the new sheet: "))
         name = str(input("Please enter a name for the new sheet / task group: "))
         overwrite = False
-        if name in calc_url_files:
-            overwrite_yn = input(name+".json already exists. Overwrite? (Y/N) ")
+        if name in calc_names:
+            overwrite_yn = input(name+" already exists in this environment. Overwrite? (Y/N) ")
             while not overwrite_yn == "Y" or overwrite_yn == "y" or overwrite_yn == "N" or overwrite_yn == "n":
                 overwrite_yn = input("Insert Y to overwrite or N to not overwrite: ")
             if overwrite_yn == "Y" or overwrite_yn == "y":

@@ -1130,7 +1130,7 @@ def get_calc_configs():
     if (len(hosts) == len(pages) == len(names)):
         return [dict(zip(('host','page','name'),(item,pages[i],names[i]))) for i,item in enumerate(hosts)]
     
-    raise ValueError('Hosts, pages and names have to be the same sice')
+    raise ValueError('Hosts, pages and names have to be the same size')
 
 def run_script():
     calc_configs = get_calc_configs()
