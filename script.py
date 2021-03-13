@@ -134,9 +134,10 @@ def save_backup(sheet_nos, note=""):
     export.export(host=calc["host"], page=calc["page"], sheets=sheet_nos, folder=folder+" "+note)
 
 class Event:
-    def __init__(self, date, task_type, event_no, regular_date, persons_needed, capable_persons_needed, event_number_in_time_period, note_types, note_numbers_in_time_period, note_time_period_start_dates, hidden, assigned_persons=[], note="", assignment_errors=[], reminders_sent=False, check_ups_sent=False, time_period_start_date=None):
+    def __init__(self, date, task_type, name, event_no, regular_date, persons_needed, capable_persons_needed, event_number_in_time_period, note_types, note_numbers_in_time_period, note_time_period_start_dates, hidden, assigned_persons=[], note="", assignment_errors=[], reminders_sent=False, check_ups_sent=False, time_period_start_date=None):
         self.date = date
         self.task_type = task_type
+        self.name = name
         self.event_no = event_no
         self.regular_date = regular_date
         self.persons_needed = persons_needed
@@ -372,7 +373,7 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         dates = python_list_from_semicolon_separated_list(any_list=row[21], data_type="str")
         for d in dates:
             note_time_period_start_dates.append(read_date(d))
-        e = Event(date=read_date(row[0]), task_type=task_type, event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[7]), capable_persons_needed=int(row[8]), assigned_persons=assigned_persons, event_number_in_time_period=int(row[17]), time_period_start_date=read_date(row[18]), note_types=note_types, note_numbers_in_time_period=note_numbers_in_time_period, note_time_period_start_dates=note_time_period_start_dates, hidden=hidden, note=row[14], assignment_errors=assignment_errors, reminders_sent=reminders_sent, check_ups_sent=check_ups_sent)
+        e = Event(date=read_date(row[0]), task_type=task_type, name=row[6], event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[7]), capable_persons_needed=int(row[8]), assigned_persons=assigned_persons, event_number_in_time_period=int(row[17]), time_period_start_date=read_date(row[18]), note_types=note_types, note_numbers_in_time_period=note_numbers_in_time_period, note_time_period_start_dates=note_time_period_start_dates, hidden=hidden, note=row[14], assignment_errors=assignment_errors, reminders_sent=reminders_sent, check_ups_sent=check_ups_sent)
         events.append(e)
 
 def assigned_persons_column_letter(person_count):
@@ -454,7 +455,7 @@ def update_ethercalc():
             e.command(e_page, ["set B"+row+" value n "+str(e_o.task_type.type_id)])
             e.command(e_page, ["set C"+row+" value n "+str(e_o.event_no)])
             e.command(e_page, ["set D"+row+" constant nd "+str(excel_date(e_o.regular_date))+" "+str(e_o.regular_date)])
-            e.command(e_page, ["set G"+row+" text t "+str(e_o.task_type.name)])
+            e.command(e_page, ["set G"+row+" text t "+str(e_o.name)])
             e.command(e_page, ["set H"+row+" value n "+str(e_o.persons_needed)])
             e.command(e_page, ["set I"+row+" value n "+str(e_o.capable_persons_needed)])
             e.command(e_page, ["set O"+row+" text t "+str(e_o.note)])
@@ -760,7 +761,7 @@ def list_and_assign_events():
             time_period_start_date = None
             if t.time_period_mode == "month" or t.time_period_mode == "year":
                 time_period_start_date = t.start
-            new_e = Event(date=t.start, task_type=t, event_no=1, regular_date=t.start, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=1, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
+            new_e = Event(date=t.start, task_type=t, name=t.name, event_no=1, regular_date=t.start, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=1, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
             t_events.append(new_e)
             events.append(new_e)
             newly_calculated_events.append(new_e)
@@ -816,7 +817,7 @@ def list_and_assign_events():
                 if t.end:
                     if new_date > t.end:
                         break
-                new_e = Event(date=new_date, task_type=t, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=event_number_in_time_period, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
+                new_e = Event(date=new_date, task_type=t, name=t.name, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=event_number_in_time_period, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
                 t_events.append(new_e)
                 events.append(new_e)
                 newly_calculated_events.append(new_e)
@@ -838,7 +839,7 @@ def list_and_assign_events():
                     additional_event_listing = True
 
             if note_concerning or additional_event_listing: # in this case, we need to calculate one more event
-                new_e = Event(date=new_date, task_type=t, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=event_number_in_time_period, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
+                new_e = Event(date=new_date, task_type=t, name=t.name, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=event_number_in_time_period, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
                 t_events.append(new_e)
                 events.append(new_e)
                 newly_calculated_events.append(new_e)
@@ -949,17 +950,17 @@ def day_days(strings, number_of_days):
 
 def assignment_notification_title(participant, event):
     strings, language = read_message_strings(participant)
-    message = strings['assignment_notification_title'].format(task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, locale=language))
+    message = strings['assignment_notification_title'].format(task_name=event.name, event_date=babel.dates.format_date(event.date, locale=language))
     return message
 
 def reminder_title(participant, event):
     strings, language = read_message_strings(participant)
-    message = strings['reminder_title'].format(task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, locale=language))
+    message = strings['reminder_title'].format(task_name=event.name, event_date=babel.dates.format_date(event.date, locale=language))
     return message
 
 def check_up_title(participant, event):
     strings, language = read_message_strings(participant)
-    message = strings['check_up_title'].format(task_name=event.task_type.name, days_ago=days_ago(strings, event))
+    message = strings['check_up_title'].format(task_name=event.name, days_ago=days_ago(strings, event))
     return message
 
 def other_assigned_persons_str(p, e, strings):
@@ -1005,7 +1006,7 @@ def assignment_notification_content(participant, event):
     other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
     please_note, please_note_for_this_event = event_notes_str(e=event, strings=strings)
     message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
-        strings['assignment_notification_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.task_type.name, in_days=in_days(strings, event), event_date=babel.dates.format_date(event.date, format='full', locale=language), reminder_days_before=int(event.task_type.reminder_days_before), day_days=day_days(strings, int(event.task_type.reminder_days_before))) + "\n" + \
+        strings['assignment_notification_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.name, in_days=in_days(strings, event), event_date=babel.dates.format_date(event.date, format='full', locale=language), reminder_days_before=int(event.task_type.reminder_days_before), day_days=day_days(strings, int(event.task_type.reminder_days_before))) + "\n" + \
         strings['substitution_note'] + "\n" + \
         please_note + please_note_for_this_event + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
@@ -1017,7 +1018,7 @@ def reminder_content(participant, event):
     other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
     please_note, please_note_for_this_event = event_notes_str(e=event, strings=strings)
     message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
-        strings['reminder_text'].format(in_days=in_days(strings, event), other_assigned_persons=other_assigned_persons, task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
+        strings['reminder_text'].format(in_days=in_days(strings, event), other_assigned_persons=other_assigned_persons, task_name=event.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
         strings['substitution_note'] + "\n" + \
         please_note + please_note_for_this_event + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
@@ -1028,7 +1029,7 @@ def check_up_content(participant, event):
     strings, language = read_message_strings(participant)
     other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
     message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
-        strings['check_up_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.task_type.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
+        strings['check_up_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
         calc['host'] + "/=" + calc['page']
     return message
