@@ -33,6 +33,12 @@ capable_after_task_count = 0
 save_backup_before_for_sheet_nos = []
 save_backup_after_for_sheet_nos = []
 
+def is_yn(string):
+    if string != "Y" and string != "y" and string != "N" and string != "n":
+        return False
+    else:
+        return True
+
 def read_config():
     config = {'foodsoft_url': os.environ['TR_FOODSOFT_URL'],'foodsoft_user': os.environ['TR_FOODSOFT_USER'],'foodsoft_password': os.environ['TR_FOODSOFT_PASS']}
     return config

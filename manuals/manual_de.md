@@ -22,11 +22,15 @@ Zunächst werden die **Teilnehmer_innen** der Gruppe eingetragen und eine oder m
 * Hinweis: Bestimmte Ausdrücke müssen in der Tabelle in Englisch eingegeben werden, z.B. die Zeitperiode als day, month oder year
 
 ## Verfügbare Module für Benachrichtigungen
-* Foodsoft (getestet für v4.6.99) - aktuell noch direkt in Taskrotation integriert, soll aber ausgelagert werden
+* Foodsoft (getestet für v4.7.99) - aktuell noch direkt in Taskrotation integriert, soll aber ausgelagert werden
+    * Entsprechenden User in Foodsoft anlegen, z.B. "Benachrichtigungs-Bot" nennen (keine speziellen Rechte nötig)
+    * Zugangsdaten als Umgebungsvariablen setzen
+    * In der Tabelle unter Teilnehmer_innen bei Kontaktinfo jeweils die User-ID aus der Foodsoft eintragen (z.B. 126)
+        * um die herauszufinden: in der Foodsoft z.B. unter Foodcoop -> Mitglieder -> "Nachricht verschicken"-Link endet mit der User-ID
 
 ## Was die Tabelle (noch) nicht kann
 * Mehr als fünf Personen zu einem Termin zuweisen
-* Anzahl der ausgeführten Dienste je nach Aufgabentyp zählen und bevorzugt Teilnehmer_innen zuweisen, die jenen Aufgabentyp noch nicht so oft hatten
+* Anzahl der ausgeführten Dienste je nach Aufgabentyp zählen und bevorzugt Teilnehmer_innen zuweisen, die jenen Aufgabentyp noch nicht so oft hatten bzw. unterschiedlichen Aufwand je nach Aufgabentyp berücksichtigen
 * Erfahrung ("kennt sich aus") je nach Aufgabentyp unterscheiden; unterschiedliche Stufen von Erfahrungen bzw. verschiedene Kenntnisse unterscheiden
 * Namen von Teilnehmer_innen automatisiert ändern (wird ein Name in der Untertabelle Teilnehmer_innen geändert, muss er auch bei allen Terminen, bei denen die Person zugewiesen ist/war, geändert werden)
 * Dienste abhaken, nachdem sie ausgeführt werden (das Skript geht davon aus, dass vergangene Termine von den zugewiesenen Personen erledigt wurden, die können aber auch bei vergangenen Terminen noch manuell geändert werden; deswegen wird in der "Rückfrage-Mail" dazu aufgerufen die Namen zu ändern, falls der Dienst nicht oder von jemand anderem ausgeführt wurde)
@@ -39,4 +43,18 @@ Zunächst werden die **Teilnehmer_innen** der Gruppe eingetragen und eine oder m
 * Besser keine Zeilen löschen, z.B. wenn ein Termin entfällt, ein_e Teilnehmer_in ausscheidet oder ein regelmäßiger Hinweis wegfällt. Stattdessen End-Datum / "aktiv bis" eintragen bzw. bei Terminen 0 benötigte Personen angeben und in der Spalte "Zeile ausblenden?" TRUE eintragen
 
 # Schritt für Schritt
-folgt noch ...
+## Tabelle aufsetzen
+* Repo klonen, Python etc. installieren
+* `python initialize.py` ausführen
+* Umgebungsvariablen setzen (siehe Readme)
+
+## Tabelle einrichten
+* Aufgabentypen eintragen
+* Ggf. regelmäßig wiederkehrende Hinweise eintragen
+* Ggf. Einstellungen anpassen
+* Teilnehmer_innen eintragen
+    * davon mind. 1 aktiv (sowie 1 "kennt sich aus", falls das bei Aufgabentypen gefordert ist)
+    * Eintrittsdatum entscheidet darüber, wer bislang "unverhältnismäßig selten" (in Relation zur Dauer der Mitgliedschaft) dran war
+* `python script.py` ausführen, um erstmalig Aufgaben anzulegen
+
+Rest folgt noch …

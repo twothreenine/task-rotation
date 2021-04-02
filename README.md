@@ -32,13 +32,13 @@ https://ethercalc.net/=taskrotation0-1
 ## Configuration
 For configuration environment variables are used. The following list shows the available variables.
 
-Note that all of theses variables needs to be set, otherwise the script will not work! Multiple instances can be handled by using a ';' as seperator.
+Note that all of theses variables needs to be set, otherwise the script will not work!
+* TR_CALC_HOST=<url to ethercalc host server (use ';' as seperator for multiple instances)>
+* TR_CALC_PAGE=<name of your sheet, without equals (use ';' as seperator for multiple instances)>
+* TR_CALC_NAME=<name for your sheet human readable (use ';' as seperator for multiple instances)>
 * TR_FOODSOFT_URL=<url to your foodsoft instance>
 * TR_FOODSOFT_USER=<foodsoft-user>
 * TR_FOODSOFT_PASS=<foodsoft-password>
-* TR_CALC_HOST=<url to ethercalc instance>
-* TR_CALC_PAGE=<name of your sheet, without equals>
-* TR_CALC_NAME=<name for your sheet human readable>
 * TR_LOG_MAIL_SERVER=<server name of smtp server>
 * TR_LOG_MAIL_PORT=<smpt port, e.g.: for STARTTLS: 587>  
 * TR_LOG_MAIL_USER=<login user> 
@@ -49,8 +49,10 @@ Note that all of theses variables needs to be set, otherwise the script will not
 
 
 
-in Windows 10 PowerShell:
-* $env:TR_foodsoft_url='...'
-* etc.
+for local use in Windows 10:
+* open system settings
+* search for "variable"
+* select "edit system environment variables" or "edit environment variables for this account" respectively (or similar)
+* set variables manually (only TR_CALC_HOST, TR_CALC_PAGE, TR_CALC_NAME necessary, foodsoft optionally)
 
 [more infos](https://superuser.com/questions/949560/how-do-i-set-system-environment-variables-in-windows-10)

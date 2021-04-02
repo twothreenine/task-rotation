@@ -66,7 +66,7 @@ def main():
         overwrite = False
         if name in calc_names:
             overwrite_yn = input(name+" already exists in this environment. Overwrite? (Y/N) ")
-            while not overwrite_yn == "Y" or overwrite_yn == "y" or overwrite_yn == "N" or overwrite_yn == "n":
+            while not script.is_yn(overwrite_yn):
                 overwrite_yn = input("Insert Y to overwrite or N to not overwrite: ")
             if overwrite_yn == "Y" or overwrite_yn == "y":
                 overwrite = True
@@ -79,6 +79,7 @@ def main():
         else:
             language = default_sheet_languages[0]
         initialize(host=host, page=page, language=language, name=name, overwrite=overwrite)
+        print("Taskrotation calc initialized at "+host+"/="+page)
     else:
         print("No locales with default sheets found.")
 
