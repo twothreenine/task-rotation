@@ -1,0 +1,54 @@
+Single Page Web App als User Interface
+
+Zugriff einstellbar:
+- öffentlich per Link (nur ansehen)
+- Passwort für gesamte Aufgabengruppe (nur ansehen)
+- Anmeldung mit Benutzerdaten (mit Bearbeitungsrechten)
+
+Fähigkeiten
+- Bezeichnung
+- Bedingungen für Erlangung
+- Stufen? prozentual? (z.B. 60% wenn 3 von 5 Bedingungen erfüllt)
+
+Statistik
+- wer wie oft (wann zuletzt) jeweilige Aufgabentypen gemacht hat
+- wer wie oft (wann zuletzt) jeweilige Teilaufgaben gemacht hat
+
+(Teil-)Aufgabentypen
+- Rollen, für die jeweils bestimmte Fähigkeiten vorausgesetzt werden können 
+- Anzahl Rollen, die eine Person maximal gleichzeitig besetzen kann
+- geschätzter Aufwand
+
+Wiederkehrende Aufgaben
+- Wiederholungsregel
+- Gesamtbezeichnung (optional)
+- enthaltene Teilaufgaben (bei jedem Termin oder mit spez. Wiederholungsregel)
+- Zuweisungseinstellungen
+- Benachrichtigungseinstellungen
+
+Menüs:
+- Terminübersicht - filterbar nach Aufgabentypen und Teilnehmer*in
+-- Optionen:
+--- Termine exportieren/abonnieren (eigene/alle/bestimmte)
+--- sich von Terminen austragen (nur wenn erlaubt)
+--- Zuständigkeiten für Termine tauschen
+--- Termine/Teilaufgaben als erledigt markieren bzw. Ergebnisse eintragen
+-- mit spez. Berechtigung:
+--- Termin anlegen, umbenennen, löschen
+--- Datum/Uhrzeit ändern
+--- Teilaufgaben zuweisen/entfernen
+
+- Teilnehmer*in
+-- Eintrittsdatum, Austrittsdatum, Pausen?
+-- Name, Passwort, Kontakt ändern
+-- Aktivität(en)
+-- Fähigkeiten
+-- Benachrichtigungseinstellungen
+-- Zeitliche Verfügbarkeit/Präferenzen (z.B. "nicht am 2. Dienstag im Monat 18-20 Uhr")
+-- Präferenzen für Aufgabentypen
+-- Präferenzen für Anzahl Co-Teilnehmer*innen
+-- Präferenzen für bestimmte Co-Teilnehmer*innen
+-- löschen
+-- neu anlegen
+
+- Einstellungen für Aufgabengruppe
