@@ -18,6 +18,7 @@ Statistik
 - Rollen, für die jeweils bestimmte Fähigkeiten vorausgesetzt werden können 
 - Anzahl Rollen, die eine Person maximal gleichzeitig besetzen kann
 - geschätzter Aufwand
+- Voneinander abhängige Termine (z.B. Eröffnung - Lieferung - Abrechnung einer Bestellung)
 
 Wiederkehrende Aufgaben
 - Wiederholungsregel

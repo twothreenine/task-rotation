@@ -429,6 +429,7 @@ def update_ethercalc():
 
     global events
     global participants
+    events_to_overwrite = []
 
     logging.debug("update_ethercalc: " + calc["host"])
     e = ethercalc.EtherCalc(calc["host"])
@@ -498,7 +499,7 @@ def update_ethercalc():
         e.command(e_page, ["set V"+row+" text t "+note_start_dates_str])
 
     # assigning events
-    for e_a in newly_assigned_events:
+    for e_a in list(set(newly_assigned_events + events_to_overwrite)):
         update_ethercalc_assignments(ecalc=e, e_page=e_page, event_to_assign=e_a)
 
     # events with assignment errors
