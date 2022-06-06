@@ -24,10 +24,11 @@ notes = []
 newly_calculated_events = []
 newly_listed_events = []
 newly_assigned_events = []
+new_assignments = []
 events_with_newly_attached_note = []
 default_language = "en"
 task_group_name = "Task group"
-recent_events_factor = 0.8
+proximate_events_factor = 0.8
 header_lines = 2
 capable_after_task_count = 0
 save_backup_before_for_sheet_nos = []
@@ -260,9 +261,9 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         global task_group_name
         task_group_name = settings_list[3][2]
     if settings_list[4][2]:
-        global recent_events_factor
-        recent_events_factor = settings_list[4][2]
-        print("recent events factor = "+str(recent_events_factor))
+        global proximate_events_factor
+        proximate_events_factor = settings_list[4][2]
+        print("proximate events factor = "+str(proximate_events_factor))
     if settings_list[5][2]:
         global capable_after_task_count
         capable_after_task_count = int(settings_list[5][2])
@@ -576,35 +577,46 @@ def count_tasks(): # calculating how many tasks each participant has done
         delta = datetime.date.today() - p.entry_date
         p.task_count_per_days_since_entry = p.task_count / int(delta.days)
 
+def list_closely_assigned_participants(events_by_proximity, proximate_events_count):
+    closely_assigned_participants = []
+    for e in events_by_proximity:
+        if proximate_events_count <= 0:
+            break
+        closely_assigned_participants.extend(e.assigned_persons)
+        if len(e.assigned_persons) <= e.persons_needed:
+            proximate_events_count -= e.persons_needed
+        else:
+            proximate_events_count -= len(e.assigned_persons)
+    return closely_assigned_participants
+
 def choose_person(to_be_assigned_event, only_if_capable=False):
+    global events
     possible_participants = []
-    for p in participants:
-        if p.active:
-            if p.active_until:
-                if p.active_until >= to_be_assigned_event.date:
-                    possible_participants.append(p)
-            else:
+    for p in [participant for participant in participants if participant.active and participant not in to_be_assigned_event.assigned_persons]:
+        if p.active_until:
+            if p.active_until >= to_be_assigned_event.date:
                 possible_participants.append(p)
+        else:
+            possible_participants.append(p)
     if only_if_capable:
         possible_participants = [participant for participant in possible_participants if participant.capable]
-    recent_events_count = recent_events_factor * len(possible_participants)
-    recently_assigned_possible_participants = []
-    assigned_events = sorted([event for event in events if event.assigned_persons], key=lambda x: x.date, reverse=True)
-    for a_e in assigned_events:
-        recent_events_count -= len(a_e.assigned_persons)
-        if recent_events_count <= -1:
-            break
-        for ap in a_e.assigned_persons:
-            recently_assigned_possible_participants.append(ap)
-    favorable_participants = [participant for participant in possible_participants if participant not in recently_assigned_possible_participants and participant not in to_be_assigned_event.assigned_persons]
+    past_events = sorted([e for e in events if e.date <= to_be_assigned_event.date and e != to_be_assigned_event], key=lambda x: x.date, reverse=True)
+    upcoming_events = sorted(list(set(events) - set(past_events)), key=lambda x: x.date)
+    upcoming_events.remove(to_be_assigned_event)
+    proximate_events_count = proximate_events_factor * len(possible_participants)
+    closely_assigned_participants = list_closely_assigned_participants(events_by_proximity=past_events, proximate_events_count=proximate_events_count)
+    closely_assigned_participants.extend(list_closely_assigned_participants(events_by_proximity=upcoming_events, proximate_events_count=proximate_events_count))
+    favorable_participants = [participant for participant in possible_participants if participant not in closely_assigned_participants]
     if not favorable_participants:
-        favorable_participants = [participant for participant in possible_participants if participant not in to_be_assigned_event.assigned_persons]
+        favorable_participants = possible_participants
     if favorable_participants:
         lowest_task_count_ratio = min(favorable_participants, key=lambda p: p.task_count_per_days_since_entry).task_count_per_days_since_entry
         most_favorable_participants = [participant for participant in favorable_participants if participant.task_count_per_days_since_entry == lowest_task_count_ratio]
         person = random.choice(most_favorable_participants)
         print("Assigned "+person.name+" to task on "+str(to_be_assigned_event.date))
         to_be_assigned_event.assigned_persons.append(person)
+        global new_assignments
+        new_assignments.append({"event": to_be_assigned_event, "participant": person})
     else:
         other_text = ""
         if to_be_assigned_event.assigned_persons:
@@ -879,7 +891,7 @@ def list_and_assign_events():
                 newly_calculated_events.append(new_e)
 
         for t_e in t_events:
-            if t_e.date >= datetime.date.today() and t_e.regular_date <= datetime.date.today() + datetime.timedelta(days=t.assign_for_days) and t_e.assigned_persons==[] and t_e.persons_needed>0 and t_e.assignment_errors==[]:
+            if t_e.date >= datetime.date.today() and t_e.regular_date <= datetime.date.today() + datetime.timedelta(days=t.assign_for_days) and (t_e.persons_needed > len(t_e.assigned_persons) or t_e.capable_persons_needed > len([p for p in t_e.assigned_persons if p.capable])) and t_e.assignment_errors==[]:
                 to_be_assigned_events.append(t_e)
                 pp.pprint(t_e.date)
 
@@ -930,10 +942,11 @@ def list_and_assign_events():
     events = [event for event in all_events if event.regular_date <= datetime.date.today() + datetime.timedelta(days=event.task_type.list_for_days)]
     events = sorted(events, key=lambda x: x.date)
     
-    for to_be_assigned_event in to_be_assigned_events:
-        for p in range(to_be_assigned_event.capable_persons_needed):
+    for to_be_assigned_event in sorted(to_be_assigned_events, key=lambda x: x.date):
+        assigned_capable_persons = [p for p in to_be_assigned_event.assigned_persons if p.capable]
+        for i in range(to_be_assigned_event.capable_persons_needed - len(assigned_capable_persons)):
             choose_person(to_be_assigned_event=to_be_assigned_event, only_if_capable=True)
-        for p in range(to_be_assigned_event.persons_needed - to_be_assigned_event.capable_persons_needed):
+        for i in range(to_be_assigned_event.persons_needed - len(to_be_assigned_event.assigned_persons)):
             choose_person(to_be_assigned_event=to_be_assigned_event)
         newly_assigned_events.append(to_be_assigned_event)
 
@@ -1087,12 +1100,13 @@ def check_up_content(participant, event):
     return message
 
 def send_assignment_notifications():
-    for e in newly_assigned_events:
-        for a_p in e.assigned_persons:
-            if a_p.contact_info:
-                title = assignment_notification_title(participant=a_p, event=e)
-                content = assignment_notification_content(participant=a_p, event=e)
-                fsc.sendMailToRecipients([int(a_p.contact_info)], {"subject":title, "body":content})
+    for n_a in new_assignments:
+        e = n_a["event"]
+        a_p = n_a["participant"]
+        if a_p.contact_info:
+            title = assignment_notification_title(participant=a_p, event=e)
+            content = assignment_notification_content(participant=a_p, event=e)
+            fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
 
 def send_reminders():
     global events
@@ -1135,14 +1149,16 @@ def reset_global_values():
     newly_listed_events = []
     global newly_assigned_events
     newly_assigned_events = []
+    global new_assignments
+    new_assignments = []
     global events_with_newly_attached_note
     events_with_newly_attached_note = []
     global default_language
     default_language = "en"
     global task_group_name
     task_group_name = "Task group"
-    global recent_events_factor
-    recent_events_factor = 0.8
+    global proximate_events_factor
+    proximate_events_factor = 0.8
     global header_lines
     header_lines = 2
     global capable_after_task_count
