@@ -8,6 +8,14 @@ from bs4 import BeautifulSoup as bs
 
 logging.basicConfig(level=logging.DEBUG)
 
+class User:
+    def __init__(self, id, name, e_mail, message_link=None, phone_number=None):
+        self.id = id
+        self.name = name
+        self.e_mail = e_mail
+        self.message_link = message_link
+        self.phone_number = phone_number
+
 class FSConnector:
     def __init__(self, url, user=None, password=None):
         self._session = None
@@ -102,21 +110,31 @@ class FSConnector:
         response = self._post(self._url_mail_send, mail_header, msg_data, response)
         logging.debug("Sent messages to " + ",".join(map(str,userIds)) + " header= " + str(response.request.headers) + " data= " + str(msg_data))
 
+    def get_user_data(self):
+        # Returns a list of all users (as User objects) containing their data
+        users = []
+        page = 1
+        while page:
+            userlist_url = f"{self._url}foodcoop?page={str(page)}&per_page=500"
+            parsed_html = bs(self._get(userlist_url, self._default_header).content, 'html5lib')
+            rows = parsed_html.body.find("div", id="users").find("tbody").find_all("tr")
+            for row in rows:
+                colums = row.find_all("td")
+                link = colums[5].find("a").get("href")
+                user_id = int(link.split("=")[-1])
+                message_link = self._url + "/".join(link.split("/")[2:])
+                users.append(User(id=user_id, name=colums[0].text.strip().replace("  ", " "), e_mail=colums[1].text.strip(), phone_number=colums[2].text.strip(), message_link=message_link))
+            pagination = parsed_html.body.find("div", id="users").find(class_="pagination")
+            if pagination:
+                next_page = pagination.find(class_="next_page")
+                if next_page:
+                    page += 1
+                else:
+                    page = None
+            else:
+                page = None
 
+        # for user in users:
+        #     print(f"{user.id} - {user.name} - {user.e_mail} - {user.phone_number} - {user.message_link}")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return users

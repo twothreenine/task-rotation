@@ -1,4 +1,4 @@
-Single Page Web App als User Interface
+(Single Page?) Web App als User Interface
 
 Zugriff einstellbar:
 - öffentlich per Link (nur ansehen)

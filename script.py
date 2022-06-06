@@ -32,6 +32,7 @@ header_lines = 2
 capable_after_task_count = 0
 save_backup_before_for_sheet_nos = []
 save_backup_after_for_sheet_nos = []
+share_contact_details = False
 
 def is_yn(string):
     if string != "Y" and string != "y" and string != "N" and string != "n":
@@ -163,7 +164,7 @@ class Event:
         self.hidden = hidden
 
 class Participant:
-    def __init__(self, name, capable, active, entry_date, old_task_count, language=None, contact_info=None):
+    def __init__(self, name, capable, active, entry_date, old_task_count, language=None, contact_info=None, full_name=None, phone_number=None, message_link=None):
         self.name = name
         self.capable = capable
         self.active = active
@@ -178,6 +179,9 @@ class Participant:
         self.task_count_per_days_since_entry = False
         self.language = language
         self.contact_info = contact_info
+        self.full_name = full_name
+        self.phone_number = phone_number
+        self.message_link = message_link
 
 class Task:
     def __init__(self, type_id, name, start, end, time_period_factor, time_period_mode, day_numbers_in_time_period, weekday_filter, persons_needed, capable_persons_needed, assign_for_days, list_for_days, hide_from_days, reminder_days_before, note):
@@ -269,6 +273,10 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
     if settings_list[7][2]:
         global save_backup_after_for_sheet_nos
         save_backup_after_for_sheet_nos = python_list_from_semicolon_separated_list(any_list=settings_list[7][2], convert_none_from_str=True)
+    if settings_list[8][2]:
+        if settings_list[8][2]=="1":
+            global share_contact_details
+            share_contact_details = True
 
     global events
     global participants
@@ -307,7 +315,13 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         if row[1]=="0": capable=False
         active = True
         if row[2]=="0": active=False
-        p = Participant(name=row[0], capable=capable, active=active, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6], contact_info=row[7])
+        try:
+            contact_info = int(row[7])
+        except TypeError:
+            contact_info = None
+        except:
+            raise
+        p = Participant(name=row[0], capable=capable, active=active, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6], contact_info=contact_info)
         if row[4]!="": p.active_until=read_date(row[5])
         participants.append(p)
 
@@ -381,6 +395,19 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
             note_time_period_start_dates.append(read_date(d))
         e = Event(date=read_date(row[0]), task_type=task_type, name=row[6], event_no=row[2], regular_date=read_date(row[3]), persons_needed=int(row[7]), capable_persons_needed=int(row[8]), assigned_persons=assigned_persons, event_number_in_time_period=int(row[17]), time_period_start_date=read_date(row[18]), note_types=note_types, note_numbers_in_time_period=note_numbers_in_time_period, note_time_period_start_dates=note_time_period_start_dates, hidden=hidden, note=row[14], assignment_errors=assignment_errors, reminders_sent=reminders_sent, check_ups_sent=check_ups_sent)
         events.append(e)
+
+def load_contact_data():
+    users = fsc.get_user_data()
+    global participants
+    for p in participants:
+        if p.contact_info:
+            matching_users = [u for u in users if u.id == p.contact_info]
+            if matching_users:
+                user = matching_users[0]
+                p.full_name = user.name
+                p.e_mail = user.e_mail
+                p.phone_number = user.phone_number
+                p.message_link = user.message_link
 
 def assigned_persons_column_letter(person_count):
     if person_count == 0:
@@ -1008,14 +1035,29 @@ def event_notes_str(e, strings):
             please_note_for_this_event = strings['please_note_for_this_event'] + e.note + "\n"
     return please_note, please_note_for_this_event
 
+def contact_details_str(p, e, strings):
+    text = ""
+    persons = [participant for participant in e.assigned_persons if participant != p]
+    for person in persons:
+        if person.contact_info:
+            text += f"\n{strings['contact_details_of']} {person.full_name}:\n"
+            if person.phone_number:
+                text += f"{strings['telephone']}: {person.phone_number}\n"
+            if person.message_link:
+                text += f"{strings['send_message']}: {person.message_link}\n"
+    return text
+
 def assignment_notification_content(participant, event):
     strings, language = read_message_strings(participant)
     other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
     please_note, please_note_for_this_event = event_notes_str(e=event, strings=strings)
+    contact_details = ""
+    if share_contact_details:
+        contact_details = contact_details_str(p=participant, e=event, strings=strings)
     message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
         strings['assignment_notification_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.name, in_days=in_days(strings, event), event_date=babel.dates.format_date(event.date, format='full', locale=language), reminder_days_before=int(event.task_type.reminder_days_before), day_days=day_days(strings, int(event.task_type.reminder_days_before))) + "\n" + \
         strings['substitution_note'] + "\n" + \
-        please_note + please_note_for_this_event + \
+        please_note + please_note_for_this_event + contact_details + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
         calc['host'] + "/=" + calc['page']
     return message
@@ -1024,10 +1066,13 @@ def reminder_content(participant, event):
     strings, language = read_message_strings(participant)
     other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
     please_note, please_note_for_this_event = event_notes_str(e=event, strings=strings)
+    contact_details = ""
+    if share_contact_details:
+        contact_details = contact_details_str(p=participant, e=event, strings=strings)
     message = strings['hello'].format(participant_name=participant.name) + "\n" + "\n" + \
         strings['reminder_text'].format(in_days=in_days(strings, event), other_assigned_persons=other_assigned_persons, task_name=event.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
         strings['substitution_note'] + "\n" + \
-        please_note + please_note_for_this_event + \
+        please_note + please_note_for_this_event + contact_details + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
         calc['host'] + "/=" + calc['page']
     return message
@@ -1058,7 +1103,7 @@ def send_reminders():
                 if a_p.contact_info:
                     title = reminder_title(participant=a_p, event=e)
                     content = reminder_content(participant=a_p, event=e)
-                    fsc.sendMailToRecipients([int(a_p.contact_info)], {"subject":title, "body":content})
+                    fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
             e.reminders_sent = True
 
 def send_check_ups():
@@ -1070,7 +1115,7 @@ def send_check_ups():
                 if a_p.contact_info:
                     title = check_up_title(participant=a_p, event=e)
                     content = check_up_content(participant=a_p, event=e)
-                    fsc.sendMailToRecipients([int(a_p.contact_info)], {"subject":title, "body":content})
+                    fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
             e.check_ups_sent = True
 
 def reset_global_values():
@@ -1106,10 +1151,14 @@ def reset_global_values():
     save_backup_before_for_sheet_nos = []
     global save_backup_after_for_sheet_nos
     save_backup_after_for_sheet_nos = []
+    global share_contact_details
+    share_contact_details = False
 
 def run_script_for_calc(calc_config):
     set_calc_data(calc_config)
     load_objects()
+    if share_contact_details:
+        load_contact_data()
     if save_backup_before_for_sheet_nos:
         save_backup(sheet_nos=save_backup_before_for_sheet_nos, note="before")
     count_tasks()
@@ -1192,9 +1241,9 @@ def main():
             
 
     except Exception as e:
-        logging.error(str(e))
+        logging.exception(str(e))
     finally:
-        logging.info("Taskrotation servie shutdown!")  
+        logging.info("Taskrotation service shutdown!")  
 
 if __name__== "__main__":
     main()
