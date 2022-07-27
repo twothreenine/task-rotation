@@ -13,7 +13,7 @@ part:audit
 Content-type: text/plain; charset=UTF-8
 
 version:1.5
-cell:E1:ntvf:1
+cell:E1:t:Hint\c In case only the first two rows are shown, please try scrolling down, then the rest should appear!:f:1:ntvf:1:colspan:8
 cell:A2:t:Date:ro:yes:comment:YYYY-MM-DD
 cell:B2:t:Task ID (hide):ro:yes
 cell:C2:t:Event no. (hide):ro:yes
@@ -53,6 +53,7 @@ col:A:w:101
 col:B:hide:yes
 col:C:hide:yes
 col:D:w:92
+col:D:hide:yes
 col:E:w:101
 col:F:w:65
 col:G:w:125
@@ -70,6 +71,7 @@ col:V:w:107
 col:V:hide:yes
 row:2:h:15
 sheet:c:23:r:3:tvf:2
+font:1:italic bold * *
 valueformat:1:dddd
 valueformat:2:text-wiki
 --SocialCalcSpreadsheetControlSave

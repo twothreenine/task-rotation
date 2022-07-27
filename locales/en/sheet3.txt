@@ -28,13 +28,15 @@ cell:L2:t:List for ... days in advance:ro:yes
 cell:M2:t:Hide from ... days past:ro:yes
 cell:N2:t:Send reminder ... days prior:ro:yes
 cell:O2:t:Please note (notes):ro:yes
+cell:P2:t:Rearrange from date (use when changing time period):ro:yes
 col:B:w:89
 col:C:w:97
 col:G:w:96
 col:H:w:113
 col:J:w:86
 col:O:w:316
-sheet:c:15:r:2:tvf:1
+col:P:w:101
+sheet:c:16:r:2:tvf:1
 valueformat:1:text-wiki
 --SocialCalcSpreadsheetControlSave
 Content-type: text/plain; charset=UTF-8

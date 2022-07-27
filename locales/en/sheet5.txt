@@ -27,7 +27,7 @@ cell:E2:t:Recommended setting:ro:yes:cf:1
 cell:F2:t:Explanation:ro:yes
 cell:A3:vtc::::cf:1
 cell:B3:t:Version:ro:yes
-cell:C3:t:0.1:cf:1
+cell:C3:t:0.2:cf:1
 cell:D3:vtc::::ro:yes
 cell:E3:vtc::::ro:yes:cf:1
 cell:F3:t:Number of used script/sheet version:ro:yes
@@ -40,13 +40,13 @@ cell:F4:t:Number of rows above the first regular entry of each table. Adjust thi
 cell:G4:cf:1
 cell:A5:vtc:::
 cell:B5:t:Default language:ro:yes
-cell:C5:t:en:cf:1
+cell:C5:cf:1
 cell:D5:t:de_AT;en:ro:yes
 cell:E5:vtc::::ro:yes:cf:1
 cell:F5:t:Language in which notification e-mails are sent, if the addressed participant has not chosen one themself:ro:yes
 cell:A6:vtc:::
 cell:B6:t:Name of this task group:ro:yes
-cell:C6:t:Unnamed task group:cf:1
+cell:C6:cf:1
 cell:D6:vtc::::ro:yes
 cell:E6:vtc::::ro:yes:cf:1
 cell:F6:t:Will appear in the notification e-mails:ro:yes
@@ -72,6 +72,11 @@ cell:C10:t:None;1;2;3;4;5
 cell:D10:t:semicolon separated list of sheet numbers (None, 1-5) or empty:ro:yes
 cell:E10:t:None;1;2;3;4;5:ro:yes
 cell:F10:t:Creates a folder in exported_sheets/ with the chosen sheets in socialcalc format. Sheet 1 = "Events" sheet etc. Sheet None is the underlying base sheet, accessible if you remove the "=" from the URL.:ro:yes
+cell:B11:t:Include contact data of co-assigned members:ro:yes
+cell:C11:vtc:nl:0:FALSE
+cell:D11:t:TRUE; FALSE:ro:yes
+cell:E11:vtc::::ro:yes
+cell:F11:t:If TRUE, contact data (if available, phone number and link to write message)  of co-assigned members will be included in assignment notification and reminder, in order to facilitate contacting the other persons assigned to an event.:ro:yes
 col:A:w:115
 col:A:hide:yes
 col:B:w:145
@@ -82,7 +87,7 @@ col:F:w:353
 col:G:w:84
 col:H:w:98
 col:I:w:319
-sheet:c:9:r:10:tvf:1
+sheet:c:9:r:11:tvf:1
 cellformat:1:left
 valueformat:1:text-wiki
 --SocialCalcSpreadsheetControlSave

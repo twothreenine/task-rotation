@@ -6,11 +6,13 @@ Python script for automatic assignment of recurring tasks within a group
 
 ## Requirements:
 
- python v3.x
- 
- pip install ethercalc-python
+ python v3.6 or higher
  
  pip install Babel
+ 
+ pip install ethercalc-python
+
+*replace ethercalc-python by following version: https://github.com/twothreenine/ethercalc-python*
 
 ## execute
 
@@ -22,7 +24,7 @@ as service:
 
 ## example sheet
 
-https://ethercalc.net/=taskrotation0-1
+https://calc.foodcoops.at/=taskrotation0-2_en
 
 ## Docker
 

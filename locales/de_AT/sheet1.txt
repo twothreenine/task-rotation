@@ -13,7 +13,7 @@ part:audit
 Content-type: text/plain; charset=UTF-8
 
 version:1.5
-cell:E1:ntvf:1
+cell:E1:t:Hinweis\c Sollten hier nur die ersten beiden Zeilen angezeigt werden, probiert bitte runterzuscrollen, dann sollte der Rest erscheinen!:f:1:ntvf:1:colspan:8
 cell:A2:t:Datum:ro:yes:comment:JJJJ-MM-TT
 cell:B2:t:Typ ID (ausblenden):ro:yes
 cell:C2:t:Termin Nr. (ausblenden):ro:yes
@@ -54,6 +54,7 @@ col:A:w:100
 col:B:hide:yes
 col:C:hide:yes
 col:D:w:100
+col:D:hide:yes
 col:E:w:100
 col:F:w:65
 col:G:w:125
@@ -76,6 +77,7 @@ col:W:w:103
 row:2:h:15
 row:3:h:15
 sheet:c:23:r:3:tvf:2
+font:1:italic bold * *
 valueformat:1:dddd
 valueformat:2:text-wiki
 --SocialCalcSpreadsheetControlSave

@@ -27,7 +27,7 @@ cell:E2:t:Empfohlene Einstellung:ro:yes:cf:1
 cell:F2:t:Erläuterung:ro:yes
 cell:A3:vtc::::cf:1
 cell:B3:t:Version:ro:yes
-cell:C3:t:0.1:cf:1
+cell:C3:t:0.2:cf:1
 cell:D3:vtc::::ro:yes
 cell:E3:vtc::::ro:yes:cf:1
 cell:F3:t:Versionsnummer der verwendeten Tabelle/Skript:ro:yes
@@ -40,13 +40,13 @@ cell:F4:t:Anzahl Zeilen vor dem ersten regulären Eintrag jeder Tabelle (muss f�
 cell:G4:cf:1
 cell:A5:vtc:::
 cell:B5:t:Standardsprache:ro:yes
-cell:C5:t:de_AT:cf:1
+cell:C5:cf:1
 cell:D5:t:de_AT;en:ro:yes
 cell:E5:vtc::::ro:yes:cf:1
 cell:F5:t:Sprache, in der Benachrichtigungs-Mails versandt werden, wenn von adressierter Teilnehmer*in nicht selbst festgelegt:ro:yes
 cell:A6:vtc:::
 cell:B6:t:Name der Aufgabengruppe:ro:yes
-cell:C6:t:Unbenannte Aufgabengruppe:cf:1
+cell:C6:cf:1
 cell:D6:vtc::::ro:yes
 cell:E6:vtc::::ro:yes:cf:1
 cell:F6:t:Erscheint in den Benachrichtigungs-Emails:ro:yes
@@ -72,6 +72,11 @@ cell:C10:t:None;1;2;3;4;5
 cell:D10:t:durch Strichpunkte getrennte Liste an Tabellennummern (None, 1-5) oder leer:ro:yes
 cell:E10:t:None;1;2;3;4;5:ro:yes
 cell:F10:t:Legt einen Ordner unter exported_sheets/ mit den gewählten Untertabellen im socialcalc Format an. Tabelle "None" ist die zugrundeliegende Tabelle, aufrufbar wenn das "=" aus der URL entfernt wird.:ro:yes
+cell:B11:t:Kontaktdaten von Mitverantwortlichen angeben:ro:yes
+cell:C11:vtc:nl:0:FALSE
+cell:D11:t:TRUE; FALSE:ro:yes
+cell:E11:vtc::::ro:yes
+cell:F11:t:Wenn TRUE, werden Kontaktdaten (ggf. Telefonnummer und Link um Nachricht zu schreiben) der Mitverantwortlichen in der Zuweisungs- und Erinnerungsmail angegeben, um die Kontaktaufnahme zwecks Absprachen zu erleichtern.:ro:yes
 col:A:w:115
 col:A:hide:yes
 col:B:w:145
@@ -82,7 +87,7 @@ col:F:w:353
 col:G:w:84
 col:H:w:98
 col:I:w:319
-sheet:c:9:r:10:tvf:1
+sheet:c:9:r:11:tvf:1
 cellformat:1:left
 valueformat:1:text-wiki
 --SocialCalcSpreadsheetControlSave

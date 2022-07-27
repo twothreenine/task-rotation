@@ -185,7 +185,7 @@ class Participant:
         self.message_link = message_link
 
 class Task:
-    def __init__(self, type_id, name, start, end, time_period_factor, time_period_mode, day_numbers_in_time_period, weekday_filter, persons_needed, capable_persons_needed, assign_for_days, list_for_days, hide_from_days, reminder_days_before, note):
+    def __init__(self, type_id, name, start, end, time_period_factor, time_period_mode, day_numbers_in_time_period, weekday_filter, persons_needed, capable_persons_needed, assign_for_days, list_for_days, hide_from_days, reminder_days_before, note, rearrange_from, old_events=None, rearranged=False):
         self.type_id = type_id
         self.name = name
         self.start = start
@@ -201,6 +201,12 @@ class Task:
         self.hide_from_days = hide_from_days
         self.reminder_days_before = reminder_days_before
         self.note = note
+        self.rearrange_from = rearrange_from
+        if old_events:
+            self.old_events = old_events
+        else:
+            self.old_events = []
+        self.rearranged = rearranged
 
 class AssignmentError:
     def __init__(self, error_type, assigned_person_no, error_message, assigned_person=""):
@@ -328,7 +334,7 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
 
     for row in task_list:
         day_numbers_in_time_period = python_list_from_semicolon_separated_list(any_list=row[6], data_type="int")
-        t = Task(type_id=row[0], name=row[1], start=read_date(row[2]), end=read_date(row[3]), time_period_factor=row[4], time_period_mode=row[5], day_numbers_in_time_period=day_numbers_in_time_period, weekday_filter=read_weekdays(row[7]), persons_needed=int(row[8]), capable_persons_needed=int(row[9]), assign_for_days=row[10], list_for_days=row[11], hide_from_days=row[12], reminder_days_before=row[13], note=row[14])
+        t = Task(type_id=row[0], name=row[1], start=read_date(row[2]), end=read_date(row[3]), time_period_factor=row[4], time_period_mode=row[5], day_numbers_in_time_period=day_numbers_in_time_period, weekday_filter=read_weekdays(row[7]), persons_needed=int(row[8]), capable_persons_needed=int(row[9]), assign_for_days=row[10], list_for_days=row[11], hide_from_days=row[12], reminder_days_before=row[13], note=row[14], rearrange_from=read_date(row[15]))
         tasks.append(t)
 
     for row in note_list:
@@ -426,17 +432,29 @@ def assigned_persons_column_letter(person_count):
 def update_ethercalc_assignments(ecalc, e_page, event_to_assign):
     global events
     person_count = 0
+
+    # empty cells (in case of overwrite)
+    for a in range(5):
+        letter = assigned_persons_column_letter(person_count=person_count)
+        if letter:
+            ecalc.command(e_page, ["set "+letter+str(events.index(event_to_assign)+1+header_lines)+" empty"])
+            person_count += 1
+
     if event_to_assign.assigned_persons:
         if len(event_to_assign.assigned_persons) > 5:
             assigned_persons_count = 5
             print("More than 5 persons to be assigned onto task on "+str(event_to_assign.date))
         else:
             assigned_persons_count = len(event_to_assign.assigned_persons)
+
+        # fill cells
+        person_count = 0
         for a in range(assigned_persons_count):
             letter = assigned_persons_column_letter(person_count=person_count)
             if letter:
                 ecalc.command(e_page, ["set "+letter+str(events.index(event_to_assign)+1+header_lines)+" text t "+event_to_assign.assigned_persons[person_count].name])
                 person_count += 1
+
     for error in event_to_assign.assignment_errors:
         if person_count > 4:
             break
@@ -457,12 +475,14 @@ def update_ethercalc():
 
     global events
     global participants
+    global tasks
     events_to_overwrite = []
 
     logging.debug("update_ethercalc: " + calc["host"])
     e = ethercalc.EtherCalc(calc["host"])
     e_page = calc["page"]+".1"
     p_page = calc["page"]+".2"
+    t_page = calc["page"]+".3"
 
     e.command(e_page, ["set B"+str(1+header_lines)+":W"+str(1+header_lines+len(events))+" readonly no"]) # unlocking cells in the events sheet
 
@@ -473,6 +493,13 @@ def update_ethercalc():
         if p.capable and not p.capable_before:
             e.command(p_page, ["set B"+str(participants.index(p) + 1 + header_lines)+" constant nl 1 TRUE"])
             print(p.name+"'s experience set to TRUE")
+
+    # updating rearranged tasks
+    for t in tasks:
+        if t.rearranged:
+            e.command(t_page, ["set P"+str(t.type_id + header_lines)+" readonly no"])
+            e.command(t_page, ["set P"+str(t.type_id + header_lines)+" empty"]) # TODO: doesn't work yet! why?
+            print(f"Task {t.name} was rearranged")
 
     # listing events
     if newly_listed_events:
@@ -561,8 +588,10 @@ def update_ethercalc_messages_sent():
 def relock_cells():
     e = ethercalc.EtherCalc(calc["host"])
     e_page = calc["page"]+".1"
+    t_page = calc["page"]+".3"
     e.command(e_page, ["set B"+str(1+header_lines)+":F"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet
     e.command(e_page, ["set P"+str(1+header_lines)+":V"+str(1+header_lines+len(events))+" readonly yes"]) # locking cells in the events sheet    if save_backup_after_for_sheet_nos:
+    e.command(t_page, ["set A"+str(1+header_lines)+":P"+str(1+header_lines+len(tasks))+" readonly yes"])
 
 def count_tasks(): # calculating how many tasks each participant has done
     global events
@@ -661,6 +690,18 @@ def calculate_month(month, year):
         month -=12
     return int(month), int(year)
 
+def find_first_date(task):
+    if task.time_period_mode == "day":
+        first_date = task.start + datetime.timedelta(days=task.day_numbers_in_time_period[0]-1)
+        time_period_start_date = None
+    elif task.time_period_mode in ["day", "month"]:
+        first_date = filter_weekdays(start_date=task.start, day_number_in_time_period=task.day_numbers_in_time_period[0], weekday_filter=task.weekday_filter)
+        time_period_start_date = task.start
+    else:
+        print("Error: Task time period mode '"+task.time_period_mode+"' is not supported. (day, month, year)")
+    return first_date, time_period_start_date
+
+
 def find_next_date(task, t_events, skip_event_numbers): # for an event to be listed
     last_date = t_events[-1].regular_date
     last_event_number_in_time_period = t_events[-1].event_number_in_time_period + skip_event_numbers
@@ -681,9 +722,11 @@ def find_next_date(task, t_events, skip_event_numbers): # for an event to be lis
             next_date = last_date + datetime.timedelta(days=interval)
     else:
         if last_first_event_in_time_period.time_period_start_date:
+            next_date_day = last_first_event_in_time_period.time_period_start_date.day
             next_date_month = last_first_event_in_time_period.time_period_start_date.month
             next_date_year = last_first_event_in_time_period.time_period_start_date.year
         else:
+            next_date_day = last_first_event_in_time_period.regular_date.day
             next_date_month = last_first_event_in_time_period.regular_date.month
             next_date_year = last_first_event_in_time_period.regular_date.year
         if task.time_period_mode == "month":
@@ -697,15 +740,15 @@ def find_next_date(task, t_events, skip_event_numbers): # for an event to be lis
         elif task.time_period_mode == "year":
             if next_event_number_in_time_period == 1:
                 next_date_year += task.time_period_factor
-                next_date_month = 1
+                # next_date_month = 1
             after_next_date_year = next_date_year + task.time_period_factor
-            after_next_date_month = 1
+            # after_next_date_month = 1
             if task.day_numbers_in_time_period[next_event_number_in_time_period-1] < 0:
                 next_date_year += 1
         else:
             print("Error: Task time period mode '"+task.time_period_mode+"' is not supported. (day, month, year)")
-        start_date = datetime.date(year=int(next_date_year), month=int(next_date_month), day=1)
-        after_next_start_date = datetime.date(year=int(after_next_date_year), month=int(after_next_date_month), day=1)
+        start_date = datetime.date(year=int(next_date_year), month=int(next_date_month), day=int(next_date_day))
+        after_next_start_date = datetime.date(year=int(after_next_date_year), month=int(after_next_date_month), day=int(next_date_day))
         if next_event_number_in_time_period == 1:
             time_period_start_date = start_date
         next_date = filter_weekdays(start_date=start_date, day_number_in_time_period=task.day_numbers_in_time_period[next_event_number_in_time_period-1], weekday_filter=task.weekday_filter)
@@ -787,6 +830,20 @@ def find_next_event(note, all_concerned_events, skip_event_numbers): # for a not
     skip_event_numbers += events_to_be_skipped
     return next_event, next_note_number_in_time_period, note_time_period_start_date, skip_event_numbers
 
+def copy_event_data(from_event, to_event):
+    to_event.date = from_event.date
+    to_event.persons_needed = from_event.persons_needed
+    to_event.capable_persons_needed = from_event.capable_persons_needed
+    to_event.assigned_persons = from_event.assigned_persons.copy()
+    to_event.note = from_event.note
+    to_event.assignment_errors = from_event.assignment_errors.copy()
+    to_event.reminders_sent = from_event.reminders_sent
+    to_event.reminders_sent_before = from_event.reminders_sent_before
+    to_event.check_ups_sent = from_event.check_ups_sent
+    to_event.check_ups_sent_before = from_event.check_ups_sent_before
+    to_event.hidden = from_event.hidden
+    return to_event
+
 def list_and_assign_events():
     global events
     global participants
@@ -803,11 +860,26 @@ def list_and_assign_events():
         if t.end:
             if t.end < datetime.date.today():
                 ended = True
-        if not t_events and t.start <= datetime.date.today() + datetime.timedelta(days=t.list_for_days) and not ended:
-            time_period_start_date = None
-            if t.time_period_mode == "month" or t.time_period_mode == "year":
-                time_period_start_date = t.start
-            new_e = Event(date=t.start, task_type=t, name=t.name, event_no=1, regular_date=t.start, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=1, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
+        if (not t_events or t.rearrange_from) and t.start <= datetime.date.today() + datetime.timedelta(days=t.list_for_days) and not ended:
+            event_no = 1
+            t_old_events = []
+            if t.rearrange_from:
+                for event in [e for e in t_events if e.date >= t.rearrange_from]:
+                    t_old_events.append(event)
+                    t_events.remove(event)
+                    events.remove(event)
+                    t.rearranged = True
+                    t.rearrange_from = None
+                event_no = 1
+                if t_events:
+                    event_no = t_events[-1].event_no + 1
+                t.old_events = t_old_events
+            first_date, time_period_start_date = find_first_date(task=t)
+            new_e = Event(date=first_date, task_type=t, name=t.name, event_no=event_no, regular_date=first_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=1, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
+            old_events_with_same_date = [e for e in t_old_events if e.regular_date == first_date]
+            if old_events_with_same_date: # then keep the existing data for this event
+                old_e = old_events_with_same_date[0]
+                new_e = copy_event_data(from_event=old_e, to_event=new_e)
             t_events.append(new_e)
             events.append(new_e)
             newly_calculated_events.append(new_e)
@@ -864,6 +936,10 @@ def list_and_assign_events():
                     if new_date > t.end:
                         break
                 new_e = Event(date=new_date, task_type=t, name=t.name, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=event_number_in_time_period, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
+                old_events_with_same_date = [e for e in t.old_events if e.regular_date == new_date]
+                if old_events_with_same_date: # then keep the existing data for this event
+                    old_e = old_events_with_same_date[0]
+                    new_e = copy_event_data(from_event=old_e, to_event=new_e)
                 t_events.append(new_e)
                 events.append(new_e)
                 newly_calculated_events.append(new_e)
@@ -886,6 +962,10 @@ def list_and_assign_events():
 
             if note_concerning or additional_event_listing: # in this case, we need to calculate one more event
                 new_e = Event(date=new_date, task_type=t, name=t.name, event_no=t_events[-1].event_no+1, regular_date=new_date, persons_needed=t.persons_needed, capable_persons_needed=t.capable_persons_needed, event_number_in_time_period=event_number_in_time_period, time_period_start_date=time_period_start_date, note_types=[], note_numbers_in_time_period=[], note_time_period_start_dates=[], hidden=False)
+                old_events_with_same_date = [e for e in t.old_events if e.regular_date == new_date]
+                if old_events_with_same_date: # then keep the existing data for this event
+                    old_e = old_events_with_same_date[0]
+                    new_e = copy_event_data(from_event=old_e, to_event=new_e)
                 t_events.append(new_e)
                 events.append(new_e)
                 newly_calculated_events.append(new_e)
