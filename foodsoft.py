@@ -9,12 +9,13 @@ from bs4 import BeautifulSoup as bs
 logging.basicConfig(level=logging.DEBUG)
 
 class User:
-    def __init__(self, id, name, e_mail, message_link=None, phone_number=None):
+    def __init__(self, id, details, message_link=None, phone_number=None):
         self.id = id
-        self.name = name
-        self.e_mail = e_mail
+        self.nick = details.get("nick")
+        self.name = details.get("name")
+        self.e_mail = details.get("email")
+        self.phone_number = details.get("phone")
         self.message_link = message_link
-        self.phone_number = phone_number
 
 class FSConnector:
     def __init__(self, url, user=None, password=None):
@@ -117,13 +118,20 @@ class FSConnector:
         while page:
             userlist_url = f"{self._url}foodcoop?page={str(page)}&per_page=500"
             parsed_html = bs(self._get(userlist_url, self._default_header).content, 'html5lib')
-            rows = parsed_html.body.find("div", id="users").find("tbody").find_all("tr")
+            users_div = parsed_html.body.find("div", id="users")
+            table_head = users_div.find("thead").find("tr").find_all("th")
+            head_columns = list()
+            for head_column in table_head:
+                if head_column.find("a"):
+                    head_columns.append(head_column.find("a").get("href").split("sort=")[1])
+            rows = users_div.find("tbody").find_all("tr")
             for row in rows:
-                colums = row.find_all("td")
-                link = colums[5].find("a").get("href")
+                columns = row.find_all("td")
+                link = columns[-1].find("a").get("href")
                 user_id = int(link.split("=")[-1])
                 message_link = self._url + "/".join(link.split("/")[2:])
-                users.append(User(id=user_id, name=colums[0].text.strip().replace("  ", " "), e_mail=colums[1].text.strip(), phone_number=colums[2].text.strip(), message_link=message_link))
+                details = {c: columns[head_columns.index(c)].text.strip().replace("  ", " ") for c in head_columns}
+                users.append(User(id=user_id, details=details, message_link=message_link))
             pagination = parsed_html.body.find("div", id="users").find(class_="pagination")
             if pagination:
                 next_page = pagination.find(class_="next_page")
@@ -133,8 +141,5 @@ class FSConnector:
                     page = None
             else:
                 page = None
-
-        # for user in users:
-        #     print(f"{user.id} - {user.name} - {user.e_mail} - {user.phone_number} - {user.message_link}")
 
         return users
