@@ -5,6 +5,7 @@ from json import dumps
 import logging
 import requests
 from bs4 import BeautifulSoup as bs
+import time
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -41,9 +42,13 @@ class FSConnector:
         if user and password:
             self.login(user, password)
 
-    def _get(self, url, header, data=None):
-        if data is None:
-            response = self._session.get(url, headers=header)
+    def _get(self, url, header, response=None):
+        while response is None: # TODO: max retries instead of endless loop?
+            try:
+                response = self._session.get(url, headers=header)
+            except requests.exceptions.ConnectionError:
+                print("requests.exceptions.ConnectionError, waiting 3 seconds and trying again ...")
+                time.sleep(3)
         if response.status_code != 200:
             self._session.close()
             logging.error('ERROR ' + str(response.status_code) + ' during GET ' + url)
@@ -117,7 +122,7 @@ class FSConnector:
         page = 1
         while page:
             userlist_url = f"{self._url}foodcoop?page={str(page)}&per_page=500"
-            parsed_html = bs(self._get(userlist_url, self._default_header).content, 'html5lib')
+            parsed_html = bs(self._get(userlist_url, self._default_header).content, 'html.parser') # do we need html5lib here?
             users_div = parsed_html.body.find("div", id="users")
             table_head = users_div.find("thead").find("tr").find_all("th")
             head_columns = list()
