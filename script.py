@@ -314,7 +314,7 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
     for row in participant_list:
         try:
             old_task_count = int(row[3])
-        except TypeError:
+        except (ValueError, TypeError):
             old_task_count = 0
         except:
             raise
@@ -324,7 +324,7 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         if row[2]=="0": active=False
         try:
             contact_info = int(row[7])
-        except TypeError:
+        except (ValueError, TypeError):
             contact_info = None
         except:
             raise
