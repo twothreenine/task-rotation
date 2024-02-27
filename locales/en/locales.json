@@ -30,7 +30,7 @@
 "check_up_title": "Did everything work out at {task_name} {days_ago}?",
 "check_up_text": "you{other_assigned_persons} were responsible for the task {task_name} on {event_date}.\nYou have carried it out as planned? Perfect, there's nothing left to do.\nYou did not do it yourself? Please enter the correct names in the spreadsheet so that our records are right.",
 
-"discourse_hello": "hi {participant_name},",
+"discourse_hello": "hi {participant_name}, ",
 "discourse_arrange_note": "\nYou are welcome to simply reply to this message in order to arrange yourselves.\n",
 "discourse_assignment_notification_title_start_singular": "You have been",
 "discourse_assignment_notification_title_start_plural": "You have been",

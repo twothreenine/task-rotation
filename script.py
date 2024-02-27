@@ -1173,7 +1173,9 @@ def discourse_hello_str(participants, strings):
     hello = ""
     for p in participants:
         hello += strings['discourse_hello'].format(participant_name=p.name)
-    return hello.capitalize()
+    if hello:
+        hello = hello[0].upper() + hello[1:]
+    return hello
 
 def discourse_assignment_notification_content(event):
     strings, language = read_message_strings()
