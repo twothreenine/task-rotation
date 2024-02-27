@@ -10,6 +10,7 @@ import random
 import os
 import babel.dates
 from foodsoft import FSConnector
+from discourse import DiscourseConnector
 import export
 import sys
 
@@ -34,6 +35,7 @@ capable_after_task_count = 0
 save_backup_before_for_sheet_nos = []
 save_backup_after_for_sheet_nos = []
 share_contact_details = False
+discourse_connector = None
 
 def is_yn(string):
     if string != "Y" and string != "y" and string != "N" and string != "n":
@@ -165,7 +167,7 @@ class Event:
         self.hidden = hidden
 
 class Participant:
-    def __init__(self, name, capable, active, entry_date, old_task_count, language=None, contact_info=None, full_name=None, phone_number=None, message_link=None):
+    def __init__(self, name, capable, active, entry_date, old_task_count, language=None, contact_info=None, discourse_username=None, full_name=None, phone_number=None, message_link=None):
         self.name = name
         self.capable = capable
         self.active = active
@@ -180,6 +182,7 @@ class Participant:
         self.task_count_per_days_since_entry = False
         self.language = language
         self.contact_info = contact_info
+        self.discourse_username = discourse_username
         self.full_name = full_name
         self.phone_number = phone_number
         self.message_link = message_link
@@ -284,6 +287,9 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
         if settings_list[8][2]=="1":
             global share_contact_details
             share_contact_details = True
+    if settings_list[9][2]:
+        global discourse_connector
+        discourse_connector = DiscourseConnector(fsc=fsc, url=settings_list[9][2])
 
     global events
     global participants
@@ -326,9 +332,13 @@ def load_objects(event_sheet_no=1, participant_sheet_no=2, task_sheet_no=3, note
             contact_info = int(row[7])
         except (ValueError, TypeError):
             contact_info = None
+        try:
+            discourse_username = row[8]
+        except (ValueError, TypeError):
+            discourse_username = None
         except:
             raise
-        p = Participant(name=row[0], capable=capable, active=active, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6], contact_info=contact_info)
+        p = Participant(name=row[0], capable=capable, active=active, entry_date=read_date(row[4]), old_task_count=old_task_count, language=row[6], contact_info=contact_info, discourse_username=discourse_username)
         if row[4]!="": p.active_until=read_date(row[5])
         participants.append(p)
 
@@ -1030,9 +1040,10 @@ def list_and_assign_events():
             choose_person(to_be_assigned_event=to_be_assigned_event)
         newly_assigned_events.append(to_be_assigned_event)
 
-def read_message_strings(participant):
-    if participant.language:
-        language = participant.language
+def read_message_strings(participant=None):
+    if participant:
+        if participant.language:
+            language = participant.language
     else:
         language = default_language
     if not os.path.exists('locales/'+language):
@@ -1075,17 +1086,33 @@ def day_days(strings, number_of_days):
     else:
         return 'error: Negative number of days set for sending reminder'
 
+def discourse_assignment_notification_title(event):
+    strings, language = read_message_strings()
+    if len(event.assigned_persons) > 1:
+        start = strings['discourse_assignment_notification_title_start_plural']
+    else:
+        start = strings['discourse_assignment_notification_title_start_singular']
+    return strings['discourse_assignment_notification_title'].format(start=start, task_name=event.name, event_date=babel.dates.format_date(event.date, locale=language))
+
 def assignment_notification_title(participant, event):
     strings, language = read_message_strings(participant)
     message = strings['assignment_notification_title'].format(task_name=event.name, event_date=babel.dates.format_date(event.date, locale=language))
     return message
+
+def discourse_reminder_title(event):
+    strings, language = read_message_strings()
+    if len(event.assigned_persons) > 1:
+        start = strings['discourse_reminder_title_start_plural']
+    else:
+        start = strings['discourse_reminder_title_start_singular']
+    return strings['discourse_reminder_title'].format(start=start, task_name=event.name, event_date=babel.dates.format_date(event.date, locale=language))
 
 def reminder_title(participant, event):
     strings, language = read_message_strings(participant)
     message = strings['reminder_title'].format(task_name=event.name, event_date=babel.dates.format_date(event.date, locale=language))
     return message
 
-def check_up_title(participant, event):
+def check_up_title(event, participant=None):
     strings, language = read_message_strings(participant)
     message = strings['check_up_title'].format(task_name=event.name, days_ago=days_ago(strings, event))
     return message
@@ -1128,7 +1155,7 @@ def event_notes_str(e, strings):
             please_note_for_this_event = strings['please_note_for_this_event'] + e.note + "\n"
     return please_note, please_note_for_this_event
 
-def contact_details_str(p, e, strings):
+def contact_details_str(e, strings, p=None, hide_message_link=False):
     text = ""
     persons = [participant for participant in e.assigned_persons if participant != p]
     for person in persons:
@@ -1136,9 +1163,41 @@ def contact_details_str(p, e, strings):
             text += f"\n{strings['contact_details_of']} {person.full_name}:\n"
             if person.phone_number:
                 text += f"{strings['telephone']}: {person.phone_number}\n"
-            if person.message_link:
+            if person.message_link and not hide_message_link:
                 text += f"{strings['send_message']}: {person.message_link}\n"
     return text
+
+def discourse_hello_str(participants, strings):
+    hello = ""
+    for p in participants:
+        hello += strings['discourse_hello'].format(participant_name=p.name)
+    return hello.capitalize()
+
+def discourse_assignment_notification_content(event):
+    strings, language = read_message_strings()
+    if len(event.assigned_persons) > 1:
+        start = strings['discourse_assignment_notification_text_start_plural']
+        note = strings['discourse_assignment_notification_text_note_plural']
+        reminder = strings['discourse_assignment_notification_text_reminder_plural']
+        substitution_plural_note = strings['discourse_substitution_note_plural_note']
+        arrange_note = strings['discourse_arrange_note']
+    else:
+        start = strings['discourse_assignment_notification_text_start_singular']
+        note = strings['discourse_assignment_notification_text_note_singular']
+        reminder = strings['discourse_assignment_notification_text_reminder_singular']
+        substitution_plural_note = ""
+        arrange_note = ""
+    please_note, please_note_for_this_event = event_notes_str(e=event, strings=strings)
+    contact_details = ""
+    if share_contact_details:
+        contact_details = contact_details_str(e=event, strings=strings, hide_message_link=True)
+    message = discourse_hello_str(participants=event.assigned_persons, strings=strings) + "\n" + "\n" + \
+        strings['discourse_assignment_notification_text'].format(start=start, task_name=event.name, in_days=in_days(strings, event), event_date=babel.dates.format_date(event.date, format='full', locale=language), note=note, reminder=reminder, reminder_days_before=int(event.task_type.reminder_days_before), day_days=day_days(strings, int(event.task_type.reminder_days_before))) + "\n" + \
+        strings['discourse_substitution_note'].format(plural_note=substitution_plural_note) + "\n" + \
+        please_note + please_note_for_this_event + arrange_note + contact_details + \
+        "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
+        calc['host'] + "/=" + calc['page']
+    return message
 
 def assignment_notification_content(participant, event):
     strings, language = read_message_strings(participant)
@@ -1151,6 +1210,26 @@ def assignment_notification_content(participant, event):
         strings['assignment_notification_text'].format(other_assigned_persons=other_assigned_persons, task_name=event.name, in_days=in_days(strings, event), event_date=babel.dates.format_date(event.date, format='full', locale=language), reminder_days_before=int(event.task_type.reminder_days_before), day_days=day_days(strings, int(event.task_type.reminder_days_before))) + "\n" + \
         strings['substitution_note'] + "\n" + \
         please_note + please_note_for_this_event + contact_details + \
+        "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
+        calc['host'] + "/=" + calc['page']
+    return message
+
+def discourse_reminder_content(event):
+    strings, language = read_message_strings()
+    if len(event.assigned_persons) > 1:
+        carry = strings['discourse_reminder_carry_plural']
+        substitution_plural_note = strings['discourse_substitution_note_plural_note']
+    else:
+        carry = strings['discourse_reminder_carry_singular']
+        substitution_plural_note = ""
+    please_note, please_note_for_this_event = event_notes_str(e=event, strings=strings)
+    contact_details = ""
+    if share_contact_details:
+        contact_details = contact_details_str(e=event, strings=strings, hide_message_link=True)
+    message = discourse_hello_str(participants=event.assigned_persons, strings=strings) + "\n" + "\n" + \
+        strings['discourse_reminder_text'].format(in_days=in_days(strings, event), task_name=event.name, carry=carry, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
+        strings['discourse_substitution_note'].format(plural_note=substitution_plural_note) + "\n" + \
+        please_note + please_note_for_this_event + arrange_note + contact_details + \
         "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
         calc['host'] + "/=" + calc['page']
     return message
@@ -1170,6 +1249,22 @@ def reminder_content(participant, event):
         calc['host'] + "/=" + calc['page']
     return message
 
+def discourse_check_up_content(event):
+    strings, language = read_message_strings()
+    if len(event.assigned_persons) > 1:
+        start = strings['discourse_check_up_text_start_plural']
+        you_have = strings['discourse_check_up_text_you_have_plural']
+        correct = strings['discourse_check_up_text_correct_plural']
+    else:
+        start = strings['discourse_check_up_text_start_singular']
+        you_have = strings['discourse_check_up_text_you_have_singular']
+        correct = strings['discourse_check_up_text_correct_singular']
+    message = discourse_hello_str(participants=event.assigned_persons, strings=strings) + "\n" + "\n" + \
+        strings['discourse_check_up_text'].format(start=start, you_have=you_have, correct=correct, task_name=event.name, event_date=babel.dates.format_date(event.date, format='full', locale=language)) + "\n" + \
+        "\n" + strings['bye'].format(task_group_name=task_group_name) + "\n" + \
+        calc['host'] + "/=" + calc['page']
+    return message
+
 def check_up_content(participant, event):
     strings, language = read_message_strings(participant)
     other_assigned_persons = other_assigned_persons_str(p=participant, e=event, strings=strings)
@@ -1180,24 +1275,42 @@ def check_up_content(participant, event):
     return message
 
 def send_assignment_notifications():
-    for n_a in new_assignments:
-        e = n_a["event"]
-        a_p = n_a["participant"]
-        if a_p.contact_info:
-            title = assignment_notification_title(participant=a_p, event=e)
-            content = assignment_notification_content(participant=a_p, event=e)
-            fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
+    if discourse_connector:
+        done_events = []
+        for n_a in new_assignments:
+            e = n_a["event"]
+            if e in done_events:
+                continue
+            recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
+            subject = discourse_assignment_notification_title(event=e)
+            body = discourse_assignment_notification_content(event=e)
+            discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
+            done_events.append(e)
+    else:
+        for n_a in new_assignments:
+            e = n_a["event"]
+            a_p = n_a["participant"]
+            if a_p.contact_info:
+                title = assignment_notification_title(participant=a_p, event=e)
+                content = assignment_notification_content(participant=a_p, event=e)
+                fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
 
 def send_reminders():
     global events
     events_to_be_reminded_of = [event for event in events if event.date >= datetime.date.today() and event.date <= datetime.date.today() + datetime.timedelta(days=event.task_type.reminder_days_before) and event.reminders_sent == False]
     for e in events_to_be_reminded_of:
         if e.assigned_persons:
-            for a_p in e.assigned_persons:
-                if a_p.contact_info:
-                    title = reminder_title(participant=a_p, event=e)
-                    content = reminder_content(participant=a_p, event=e)
-                    fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
+            if discourse_connector:
+                recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
+                subject = discourse_reminder_title(event=e)
+                body = discourse_reminder_content(event=e)
+                discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
+            else:
+                for a_p in e.assigned_persons:
+                    if a_p.contact_info:
+                        title = reminder_title(participant=a_p, event=e)
+                        content = reminder_content(participant=a_p, event=e)
+                        fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
             e.reminders_sent = True
 
 def send_check_ups():
@@ -1205,11 +1318,17 @@ def send_check_ups():
     events_to_be_checked_up_on = [event for event in events if event.date < datetime.date.today() and event.check_ups_sent == False]
     for e in events_to_be_checked_up_on:
         if e.assigned_persons:
-            for a_p in e.assigned_persons:
-                if a_p.contact_info:
-                    title = check_up_title(participant=a_p, event=e)
-                    content = check_up_content(participant=a_p, event=e)
-                    fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
+            if discourse_connector:
+                recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
+                subject = check_up_title(event=e)
+                body = discourse_check_up_content(event=e)
+                discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
+            else:
+                for a_p in e.assigned_persons:
+                    if a_p.contact_info:
+                        title = check_up_title(participant=a_p, event=e)
+                        content = check_up_content(participant=a_p, event=e)
+                        fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
             e.check_ups_sent = True
 
 def reset_global_values():
@@ -1249,6 +1368,8 @@ def reset_global_values():
     save_backup_after_for_sheet_nos = []
     global share_contact_details
     share_contact_details = False
+    global discourse_connector
+    discourse_connector = None
 
 def run_script_for_calc(calc_config):
     set_calc_data(calc_config)

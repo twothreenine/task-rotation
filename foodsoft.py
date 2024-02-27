@@ -6,6 +6,10 @@ import logging
 import requests
 from bs4 import BeautifulSoup as bs
 import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -92,7 +96,18 @@ class FSConnector:
 
     def logout(self):
         self._session.close()
-        
+
+    def open_driver(self):
+        driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
+        driver.get(self._url)
+        for cookie in self._session.cookies:
+            driver.add_cookie({
+                'name': cookie.name,
+                'value': cookie.value,
+                'path': cookie.path,
+                'expiry': cookie.expires,
+            })
+        return driver
         
     def sendMailToRecipients(self, userIds, data):
         mail_header = self._default_header
