@@ -613,8 +613,10 @@ def count_tasks(): # calculating how many tasks each participant has done
             if not a_p.capable and capable_after_task_count > 0 and a_p.task_count >= capable_after_task_count:
                 a_p.capable = True
     for p in participants:
-        delta = datetime.date.today() - p.entry_date
-        p.task_count_per_days_since_entry = p.task_count / int(delta.days)
+        delta_days = int((datetime.date.today() - p.entry_date).days)
+        if delta_days == 0:
+            delta_days = 1 # to avoid division by zero
+        p.task_count_per_days_since_entry = p.task_count / delta_days
 
 def list_closely_assigned_participants(events_by_proximity, proximate_events_count):
     closely_assigned_participants = []
@@ -1219,9 +1221,11 @@ def discourse_reminder_content(event):
     if len(event.assigned_persons) > 1:
         carry = strings['discourse_reminder_carry_plural']
         substitution_plural_note = strings['discourse_substitution_note_plural_note']
+        arrange_note = strings['discourse_arrange_note']
     else:
         carry = strings['discourse_reminder_carry_singular']
         substitution_plural_note = ""
+        arrange_note = ""
     please_note, please_note_for_this_event = event_notes_str(e=event, strings=strings)
     contact_details = ""
     if share_contact_details:

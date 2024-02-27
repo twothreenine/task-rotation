@@ -7,7 +7,7 @@ class DiscourseConnector:
         self.driver = fsc.open_driver()
         self.url = url
 
-    def send_message(recipients, subject, body):
+    def send_message(self, recipients, subject, body):
         self.driver.get(f"{self.url}/new-message?username={','.join(recipients)}")
         time.sleep(1)
         self.driver.find_element(By.ID, "reply-title").send_keys(subject)
