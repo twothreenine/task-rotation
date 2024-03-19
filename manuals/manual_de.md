@@ -22,11 +22,18 @@ Zunächst werden die **Teilnehmer_innen** der Gruppe eingetragen und eine oder m
 * Hinweis: Bestimmte Ausdrücke müssen in der Tabelle in Englisch eingegeben werden, z.B. die Zeitperiode als day, month oder year
 
 ## Verfügbare Module für Benachrichtigungen
-* Foodsoft (getestet für v4.7.99) - aktuell noch direkt in Taskrotation integriert, soll aber ausgelagert werden
+* Discourse-Nachricht
+	* Discourse muss an eine Foodsoft-Instanz angebunden sein
+	* Entsprechenden User in Foodsoft anlegen, z.B. "Benachrichtigungs-Bot" nennen (keine speziellen Rechte nötig) und damit Discourse aufrufen, sodass Account angelegt wird
+    * Foodsoft-Zugangsdaten als Umgebungsvariablen setzen
+    * In der Tabelle unter Teilnehmer_innen bei Kontaktinfo jeweils den User-Slug aus Discourse eintragen (z.B. testuser)
+	* In EtherCalc unter Einstellungen in Zelle C12 URL der Discourse-Instanz einfügen (z.B. https://forum.eure-foodcoop.at)
+* Foodsoft (getestet für v4.7.99 - funktioniert anscheinend nicht mit v4.8+)
     * Entsprechenden User in Foodsoft anlegen, z.B. "Benachrichtigungs-Bot" nennen (keine speziellen Rechte nötig)
     * Zugangsdaten als Umgebungsvariablen setzen
     * In der Tabelle unter Teilnehmer_innen bei Kontaktinfo jeweils die User-ID aus der Foodsoft eintragen (z.B. 126)
         * um die herauszufinden: in der Foodsoft z.B. unter Foodcoop -> Mitglieder -> "Nachricht verschicken"-Link endet mit der User-ID
+    * Damit dies wieder funktioniert, müsste es wohl mit Selenium statt Beautiful Soup geschrieben werden
 
 ## Was die Tabelle (noch) nicht kann
 * Mehr als fünf Personen zu einem Termin zuweisen

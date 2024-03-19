@@ -1288,9 +1288,10 @@ def send_assignment_notifications():
             if e in done_events:
                 continue
             recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
-            subject = discourse_assignment_notification_title(event=e)
-            body = discourse_assignment_notification_content(event=e)
-            discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
+            if recipients:
+                subject = discourse_assignment_notification_title(event=e)
+                body = discourse_assignment_notification_content(event=e)
+                discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
             done_events.append(e)
     else:
         for n_a in new_assignments:
@@ -1308,16 +1309,17 @@ def send_reminders():
         if e.assigned_persons:
             if discourse_connector:
                 recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
-                subject = discourse_reminder_title(event=e)
-                body = discourse_reminder_content(event=e)
-                discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
+                if recipients:
+                    subject = discourse_reminder_title(event=e)
+                    body = discourse_reminder_content(event=e)
+                    e.reminders_sent = discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
             else:
                 for a_p in e.assigned_persons:
                     if a_p.contact_info:
                         title = reminder_title(participant=a_p, event=e)
                         content = reminder_content(participant=a_p, event=e)
                         fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
-            e.reminders_sent = True
+                e.reminders_sent = True
 
 def send_check_ups():
     global events
@@ -1326,16 +1328,17 @@ def send_check_ups():
         if e.assigned_persons:
             if discourse_connector:
                 recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
-                subject = check_up_title(event=e)
-                body = discourse_check_up_content(event=e)
-                discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
+                if recipients:
+                    subject = check_up_title(event=e)
+                    body = discourse_check_up_content(event=e)
+                    e.check_ups_sent = discourse_connector.send_message(recipients=recipients, subject=subject, body=body)
             else:
                 for a_p in e.assigned_persons:
                     if a_p.contact_info:
                         title = check_up_title(participant=a_p, event=e)
                         content = check_up_content(participant=a_p, event=e)
                         fsc.sendMailToRecipients([a_p.contact_info], {"subject":title, "body":content})
-            e.check_ups_sent = True
+                e.check_ups_sent = True
 
 def reset_global_values():
     global calc
@@ -1375,6 +1378,7 @@ def reset_global_values():
     global share_contact_details
     share_contact_details = False
     global discourse_connector
+    discourse_connector.driver.quit()
     discourse_connector = None
 
 def run_script_for_calc(calc_config):

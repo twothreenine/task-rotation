@@ -14,6 +14,12 @@ Python script for automatic assignment of recurring tasks within a group
 
 *replace ethercalc-python by following version: https://github.com/twothreenine/ethercalc-python*
 
+Beautiful Soup
+
+Selenium
+
+Webdriver Manager
+
 ## execute
 
 for a single run: 
