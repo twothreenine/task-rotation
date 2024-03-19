@@ -10,15 +10,13 @@ Python script for automatic assignment of recurring tasks within a group
  
  pip install Babel
  
- pip install ethercalc-python
+ pip install git+https://github.com/twothreenine/ethercalc-python
 
-*replace ethercalc-python by following version: https://github.com/twothreenine/ethercalc-python*
+ Beautiful Soup
 
-Beautiful Soup
+ Selenium
 
-Selenium
-
-Webdriver Manager
+ Webdriver Manager
 
 ## execute
 
