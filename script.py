@@ -1280,6 +1280,9 @@ def check_up_content(participant, event):
         calc['host'] + "/=" + calc['page']
     return message
 
+def eliminate_duplicates(my_list):
+    return list(dict.fromkeys(my_list))
+
 def send_assignment_notifications():
     if discourse_connector:
         done_events = []
@@ -1287,7 +1290,7 @@ def send_assignment_notifications():
             e = n_a["event"]
             if e in done_events:
                 continue
-            recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
+            recipients = eliminate_duplicates([a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username])
             if recipients:
                 subject = discourse_assignment_notification_title(event=e)
                 body = discourse_assignment_notification_content(event=e)
@@ -1308,7 +1311,7 @@ def send_reminders():
     for e in events_to_be_reminded_of:
         if e.assigned_persons:
             if discourse_connector:
-                recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
+                recipients = eliminate_duplicates([a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username])
                 if recipients:
                     subject = discourse_reminder_title(event=e)
                     body = discourse_reminder_content(event=e)
@@ -1327,7 +1330,7 @@ def send_check_ups():
     for e in events_to_be_checked_up_on:
         if e.assigned_persons:
             if discourse_connector:
-                recipients = [a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username]
+                recipients = eliminate_duplicates([a_p.discourse_username for a_p in e.assigned_persons if a_p.discourse_username])
                 if recipients:
                     subject = check_up_title(event=e)
                     body = discourse_check_up_content(event=e)

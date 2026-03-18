@@ -92,7 +92,7 @@ class FSConnector:
         login_header['Referer'] = self._url_login_request
 
         response = self._post(self._url_login_post, login_header, self._login_data, request)
-        logging.debug(user + ' logged in sucessfully to ' + self._url)
+        logging.debug(user + ' logged in successfully to ' + self._url)
 
     def logout(self):
         self._session.close()
