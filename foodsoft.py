@@ -14,7 +14,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 logging.basicConfig(level=logging.DEBUG)
 
 class User:
-    def __init__(self, id, details, message_link=None, phone_number=None):
+    def __init__(self, details, id=None, message_link=None):
         self.id = id
         self.nick = details.get("nick")
         self.name = details.get("name")
@@ -133,8 +133,10 @@ class FSConnector:
 
     def get_user_data(self):
         # Returns a list of all users (as User objects) containing their data
+        # warning: If the message plugin is disabled and the bot user does not have admin rights, the users will not contain their IDs
         users = []
         page = 1
+        links_available = False
         while page:
             userlist_url = f"{self._url}foodcoop?page={str(page)}&per_page=500"
             parsed_html = bs(self._get(userlist_url, self._default_header).content, 'html.parser') # do we need html5lib here?
@@ -147,11 +149,16 @@ class FSConnector:
             rows = users_div.find("tbody").find_all("tr")
             for row in rows:
                 columns = row.find_all("td")
-                link = columns[-1].find("a").get("href")
-                user_id = int(link.split("=")[-1])
-                message_link = self._url + "/".join(link.split("/")[2:])
+                link = columns[-1].find("a")
+                user_id = None
+                message_link = None
+                if link:
+                    links_available = True
+                    link = link.get("href")
+                    user_id = int(link.split("=")[-1])
+                    message_link = self._url + "/".join(link.split("/")[2:])
                 details = {c: columns[head_columns.index(c)].text.strip().replace("  ", " ") for c in head_columns}
-                users.append(User(id=user_id, details=details, message_link=message_link))
+                users.append(User(details=details, id=user_id, message_link=message_link))
             pagination = parsed_html.body.find("div", id="users").find(class_="pagination")
             if pagination:
                 next_page = pagination.find(class_="next_page")
@@ -162,4 +169,34 @@ class FSConnector:
             else:
                 page = None
 
+        if not links_available:
+            page = 1
+            while page:
+                userlist_admin_url = f"{self._url}admin/users?page={str(page)}&per_page=500"
+                parsed_html = bs(self._get(userlist_admin_url, self._default_header).content, 'html.parser')
+                users_div = parsed_html.body.find("div", id="users")
+                if users_div:
+                    table_head = users_div.find("thead").find("tr").find_all("th")
+                    head_columns = list()
+                    for head_column in table_head:
+                        if head_column.find("a"):
+                            head_columns.append(head_column.find("a").get("href").split("sort=")[1])
+                    rows = users_div.find("tbody").find_all("tr")
+                    for row in rows:
+                        columns = row.find_all("td")
+                        user_id = int(columns[0].find("a").get("href").split("users/")[-1])
+                        details = {c: next(columns[head_columns.index(c)].stripped_strings, "").replace("  ", " ") for c in head_columns}
+                        e_mail = details.get("email")
+                        matching_user = next((u for u in users if u.e_mail == e_mail))
+                        matching_user.id = user_id
+                        pagination = parsed_html.body.find("div", id="users").find(class_="pagination")
+                if pagination:
+                    next_page = pagination.find(class_="next_page")
+                    if next_page:
+                        page += 1
+                    else:
+                        page = None
+                else:
+                    page = None
+        
         return users
